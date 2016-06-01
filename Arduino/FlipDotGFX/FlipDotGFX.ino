@@ -9,7 +9,7 @@
 #define OE 9
 
 
-FlipDot flipdot(FD_COLUMS, FD_ROWS);
+FlipDot flipdot(50, FD_ROWS);
 
 
 void setup() {
@@ -26,12 +26,32 @@ void setup() {
 
 void loop() {
   flipdot.setTextColor(FLIPDOT_YELLOW, FLIPDOT_BLACK);
-  for (char c = '0'; c <= 'z'; c++) {
-    flipdot.setCursor(0,0);
+  flipdot.setTextSize(1);
+  flipdot.setCursor(0,0);
+  for (char c = '0'; c <= '7'; c++) {
     flipdot.write(c);
-    flipdot.update();
-    delay(400);
   } 
+  flipdot.setCursor(0,8);
+  for (char c = 'A'; c <= 'H'; c++) {
+    flipdot.write(c);
+  } 
+  flipdot.update();
+  delay(1000);
 
+  flipdot.setCursor(0,0);
+  flipdot.setTextSize(2);
+  for (char c = 'A'; c <= 'D'; c++) {
+    flipdot.write(c);
+  } 
+  flipdot.update();
+  delay(1000);
+
+  flipdot.setCursor(0,0);
+  flipdot.setTextSize(2);
+  for (char c = '0'; c <= '3'; c++) {
+    flipdot.write(c);
+  } 
+  flipdot.update();
+  delay(1000);
 }
 
