@@ -1,5 +1,3 @@
-#include <Wire.h>
-#include <SPI.h>
 #include "FlipDot.h"
 
 #define LATCH 10
