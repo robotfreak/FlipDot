@@ -7,6 +7,7 @@
 #include "WProgram.h"
 #endif 
 #include <Adafruit_GFX.h> 
+#include "f5x7font5pt7b.h"
 
 const byte LATCH = 10;
 const byte OE = 9;
