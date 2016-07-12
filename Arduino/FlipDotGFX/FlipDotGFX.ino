@@ -1,7 +1,4 @@
 #include <Wire.h>
-#include <TimeLib.h>
-#include <RTClib.h>
-#include <SHT1x.h>
 #include <SPI.h>
 #include "FlipDot.h"
 
@@ -25,6 +22,7 @@ void setup() {
 }
 
 void loop() {
+  flipdot.setFont(&f5x75pt7b);
   flipdot.setTextColor(FLIPDOT_YELLOW, FLIPDOT_BLACK);
   flipdot.setTextSize(1);
   flipdot.setCursor(0,0);
