@@ -47,17 +47,19 @@ byte FlipDot::bitReverse( byte x )
 
 void FlipDot::setPixel(int16_t x, int16_t y, uint16_t color)
 {
-  int y2dot[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+//  int y2dot[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
   int idx, dot;
   if (y > 7) 
   {
     idx = 1;
-    dot = y2dot[y-8];
+    dot = (1 << (y-8));
+//    dot = y2dot[y-8];
   }
   else 
   {
     idx = 0;
-    dot = y2dot[y];
+    dot = (1 << y);
+//    dot = y2dot[y];
   }
   if (color)
     fdMtx[idx][x] |= dot;
@@ -126,8 +128,9 @@ void FlipDot::updatePanel(int panel)
     delayMicroseconds(15);
 
     bitClear(this->fdCtrl, FD_STROBE_SIG);
-    this->fdRow1 = fdMtx[0][col];
-    this->fdRow2 = fdMtx[1][col];
+    // for simpler hardware wiring flipdot pixel row are in reverse order (must be flipped bit wise)
+    this->fdRow1 = bitReverse(fdMtx[0][col]);
+    this->fdRow2 = bitReverse(fdMtx[1][col]);
     ShiftOut();
     delayMicroseconds(2000);
 
