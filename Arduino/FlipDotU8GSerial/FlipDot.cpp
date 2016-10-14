@@ -35,6 +35,16 @@ void FlipDot::drawPixel(int16_t x, int16_t y, uint16_t color) {
   setPixel(x,y,color);
 } 
 
+// Reverse the order of bits in a byte.
+// I.e. MSB is swapped with LSB, etc.
+byte FlipDot::bitReverse( byte x )
+{
+   x = ((x >> 1) & 0x55) | ((x << 1) & 0xaa);
+   x = ((x >> 2) & 0x33) | ((x << 2) & 0xcc);
+   x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
+   return x;    
+} 
+
 void FlipDot::setPixel(int16_t x, int16_t y, uint16_t color)
 {
   int y2dot[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
