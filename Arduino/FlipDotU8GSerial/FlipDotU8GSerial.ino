@@ -9,7 +9,7 @@
 FlipDot fd(LATCH, OE);
 int fontWidth, fontHeight;
 
-#define DEBUG
+//#define DEBUG
 
 FlipDot flipdot(50, FD_ROWS);
 
@@ -70,13 +70,14 @@ u8g_t u8g;
 #define SCMD_EOT   0x8F
 
 enum eSCmdState {
-  SCS_INIT,
-  SCS_GET_SOT,
-  SCS_GET_CMD,
-  SCS_GET_PAN,
-  SCS_GET_DAT,
-  SCS_END_DAT,
-  SCS_GET_EOT
+  SCS_INIT,     // 0
+  SCS_GET_SOT,  // 1
+  SCS_GET_CMD,  // 2
+  SCS_GET_PAN,  // 3
+  SCS_GET_DAT,  // 4
+  SCS_END_DAT,  // 5
+  SCS_GET_EOT,  // 6
+  SCS_ERR       // 7
 };
 
 enum eSCmdState SCState = SCS_INIT;
@@ -87,20 +88,35 @@ int selPanel = 0;
 
 void copyDat2Col(int ofs, int dat)
 {
-  if (ofs < 25)
+  if (ofs < 28)
   {
-    for (int c = 0; c < 8; c++)
+    for (int c = 0; c < 7; c++)
     {
       if (dat &  (1 << c))
-        u8g_DrawPixel(&u8g, ofs, c);
+        flipdot.setPixel(ofs, c, 1);
+      else
+        flipdot.setPixel(ofs, c, 0);
+
     }
   }
   else if (ofs >= 28 && ofs < 56)
   {
-    for (int c = 0; c < 8; c++)
+    for (int c = 0; c < 7; c++)
     {
       if (dat &  (1 << c))
-        u8g_DrawPixel(&u8g, ofs-28, c+8);
+        flipdot.setPixel(ofs-28, c+7, 1);
+      else
+        flipdot.setPixel(ofs-28, c+7, 0);
+    }
+  }
+  else if (ofs >= 56 && ofs < 84)
+  {
+    for (int c = 0; c < 2; c++)
+    {
+      if (dat &  (1 << c))
+        flipdot.setPixel(ofs-56, c+14, 1);
+      else
+        flipdot.setPixel(ofs-56, c+14, 0);
     }
   }
 }
@@ -108,57 +124,83 @@ void copyDat2Col(int ofs, int dat)
 int parseSerial(int dat)
 {
   int ret = 0;
+  int err = 0;
+  int ofs;
+
   switch (SCState)
   {
     case SCS_INIT:
-      if (dat == SCMD_SOT) 
+      if (dat == SCMD_SOT)
       {
         SCState = SCS_GET_SOT;
         inPt = 0;
       }
-      else SCState = SCS_INIT;
-    break;    
+      else
+      {
+        err = -1;
+        SCState = SCS_INIT;
+      }
+      break;
     case SCS_GET_SOT:
       //Serial.println("Got SOT");
       if (dat == SCMD_CMD56) SCState = SCS_GET_CMD;
-      else SCState = SCS_INIT;
-    break;    
+      else
+      {
+        err = -2;
+        SCState = SCS_INIT;
+      }
+      break;
     case SCS_GET_CMD:
       //Serial.println("Got CMD");
-      if (dat >= SCMD_PAN1 && dat <= SCMD_PAN5) 
+      if (dat >= SCMD_PAN1 && dat <= SCMD_PAN5)
       {
-        SCState = SCS_GET_PAN;
+        SCState = SCS_GET_DAT;
         selPanel = dat;
       }
-      else SCState = SCS_INIT;
-    break;    
-    case SCS_GET_PAN:
+      else
+      {
+        err = -3;
+        SCState = SCS_INIT;
+      }
+      break;
     case SCS_GET_DAT:
       //Serial.println("Got DAT");
-      if (inPt < 56) 
+      if (inPt < 27)
       {
-        copyDat2Col(inPt, dat);
+        if (selPanel == 3) 
+          ofs = 56; 
+        if (selPanel == 2) 
+          ofs = 28; 
+        else ofs = 0;
+        copyDat2Col(inPt+ofs, dat);
         inBuf[inPt++] = dat;
-        SCState = SCS_GET_DAT;
       }
       else SCState = SCS_END_DAT;
-    break;    
+      break;
     case SCS_END_DAT:
-      //Serial.println("Got EOT");
-      if (dat == SCMD_EOT) 
+      if (dat == SCMD_EOT)
       {
         SCState = SCS_INIT;
         ret = selPanel;
       }
-      else SCState = SCS_INIT;
-    break;    
+      else
+      {
+        err = -4;
+        SCState = SCS_INIT;
+      }
+      break;
+    default:
+      SCState = SCS_INIT;
+      break;
   }
+  if (err)
+    ret = err;
   return ret;
 }
 
 void setup() {
 
-  Serial.begin(115200);
+  Serial.begin(19200);
   Serial.println ("FlipDot U8G Serial Test v1.0");
   while (!Serial);
 
@@ -175,10 +217,22 @@ void loop() {
   {
     inByte = Serial.read();
     ret = parseSerial(inByte);
+    Serial.print(inByte, HEX);
+    Serial.print(", ");
     if (ret > 0)
     {
-      flipdot.updatePanel(ret-1);
+      Serial.println("OK");
+      flipdot.updatePanel(0);
+      flipdot.updatePanel(1);
     }
+    else if (ret < 0)
+    {
+      Serial.print("Err: ");
+      Serial.print(ret);
+      Serial.print(", ");
+      Serial.println(inByte, HEX);
+    }
+
   }
 }
 
