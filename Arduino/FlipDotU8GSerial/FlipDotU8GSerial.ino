@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define LATCH 10
-#define OE 9
+//#define LATCH 10
+//#define OE 9
 
-FlipDot fd(LATCH, OE);
+//FlipDot fd(LATCH, OE);
 int fontWidth, fontHeight;
 
-//#define DEBUG
+#define DEBUG
 
 FlipDot flipdot(50, FD_ROWS);
 
@@ -60,14 +60,14 @@ void writeFlipDiscMatrix(uint8_t id, uint8_t page, uint8_t width, uint8_t *row1,
 
 u8g_t u8g;
 
-#define SCMD_SOT   0x80
-#define SCMD_CMD56 0x85
-#define SCMD_PAN1  0x01
-#define SCMD_PAN2  0x02
-#define SCMD_PAN3  0x03
-#define SCMD_PAN4  0x04
-#define SCMD_PAN5  0x05
-#define SCMD_EOT   0x8F
+#define SCMD_SOT   0x0080
+#define SCMD_CMD56 0x0085
+#define SCMD_PAN1  0x0001
+#define SCMD_PAN2  0x0002
+#define SCMD_PAN3  0x0003
+#define SCMD_PAN4  0x0004
+#define SCMD_PAN5  0x0005
+#define SCMD_EOT   0x008F
 
 enum eSCmdState {
   SCS_INIT,     // 0
@@ -81,7 +81,7 @@ enum eSCmdState {
 };
 
 enum eSCmdState SCState = SCS_INIT;
-int inBuf[56];
+int inBuf[128];
 int inPt = 0;
 int selPanel = 0;
 
@@ -127,6 +127,17 @@ int parseSerial(int dat)
   int err = 0;
   int ofs;
 
+  switch (dat)
+  {
+    case SCMD_SOT:
+      SCState = SCS_INIT;
+    break;
+    case SCMD_EOT:
+      SCState = SCS_END_DAT;
+    break;
+    
+    
+  }
   switch (SCState)
   {
     case SCS_INIT:
@@ -137,13 +148,14 @@ int parseSerial(int dat)
       }
       else
       {
-        err = -1;
+//        err = -1;
         SCState = SCS_INIT;
       }
       break;
     case SCS_GET_SOT:
       //Serial.println("Got SOT");
-      if (dat == SCMD_CMD56) SCState = SCS_GET_CMD;
+      if (dat == SCMD_CMD56) 
+        SCState = SCS_GET_CMD;
       else
       {
         err = -2;
@@ -165,7 +177,7 @@ int parseSerial(int dat)
       break;
     case SCS_GET_DAT:
       //Serial.println("Got DAT");
-      if (inPt < 27)
+      if (inPt < 28)
       {
         if (selPanel == 3) 
           ofs = 56; 
@@ -199,20 +211,32 @@ int parseSerial(int dat)
 }
 
 void setup() {
-
-  Serial.begin(19200);
+  int x,y;
+  Serial.begin(9600);
   Serial.println ("FlipDot U8G Serial Test v1.0");
   while (!Serial);
 
-  flipdot.begin(LATCH, OE);
-  u8g_Init(&u8g, &u8g_dev_flipdisc_2x7);
-  u8g_SetFlipDiscCallback(&u8g, writeFlipDiscMatrix);
-  u8g_FirstPage(&u8g);
+  flipdot.begin();
+//  u8g_Init(&u8g, &u8g_dev_flipdisc_2x7);
+//  u8g_SetFlipDiscCallback(&u8g, writeFlipDiscMatrix);
+//  u8g_FirstPage(&u8g);
+  for(x=0;x<28;x++)
+    for(y=0;y<16;y++)
+      flipdot.setPixel(x, y, 1);
+  flipdot.update();
+  delay(3000);
+      
 }
 
-void loop() {
-  int inByte;
+int inByte = 0;
   int ret;
+
+void loop() {
+}
+
+
+void serialEvent() {
+  
   while (Serial.available() > 0)
   {
     inByte = Serial.read();
@@ -222,8 +246,9 @@ void loop() {
     if (ret > 0)
     {
       Serial.println("OK");
-      flipdot.updatePanel(0);
-      flipdot.updatePanel(1);
+      flipdot.update();
+//      flipdot.updatePanel(0);
+//      flipdot.updatePanel(1);
     }
     else if (ret < 0)
     {

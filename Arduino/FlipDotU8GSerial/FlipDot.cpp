@@ -16,17 +16,26 @@ FlipDot::FlipDot(int _sizeX, int _sizeY)
 
 }
 
-void FlipDot::begin(int _latchPin, int _oePin)
+void FlipDot::begin()
 {
-  this->latchPin = _latchPin;
-  this->oePin = _oePin;
+  this->latchPin = LATCH;
+  this->oePin = OE;
+  this->resPin = RES;
+  this->colPin = COL;
 
   memset(fdMtx, 0x00, sizeof(fdMtx));
 
   SPI.begin ();
   pinMode(this->latchPin, OUTPUT);
   pinMode(this->oePin, OUTPUT);
-  digitalWrite(this->oePin, LOW);
+  pinMode(this->resPin, OUTPUT);
+  pinMode(this->colPin, OUTPUT);
+  digitalWrite (this->resPin, HIGH);
+  delayMicroseconds(100);
+  bitSet  (this->fdCtrl, FD_FRAME_SIG);
+  ShiftOut();
+  digitalWrite (this->oePin, LOW);
+  digitalWrite (this->colPin, HIGH);
 }
 
 void FlipDot::drawPixel(int16_t x, int16_t y, uint16_t color) {
@@ -62,9 +71,9 @@ void FlipDot::setPixel(int16_t x, int16_t y, uint16_t color)
 //    dot = y2dot[y];
   }
   if (color)
-    fdMtx[idx][x] |= dot;
+    this->fdMtx[idx][x] |= dot;
   else
-    fdMtx[idx][x] &= ~dot;
+    this->fdMtx[idx][x] &= ~dot;
 }
 
 void FlipDot::ShiftOut(void)

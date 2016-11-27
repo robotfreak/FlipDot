@@ -9,6 +9,9 @@
 
 const byte LATCH = 10;
 const byte OE = 9;
+const byte RES = 6;
+const byte COL = 4;
+
 
 #define FLIPDOT_BLACK          0
 #define FLIPDOT_YELLOW         1  
@@ -30,9 +33,10 @@ const byte OE = 9;
 class FlipDot {
   public: 
     FlipDot(int _sizeX, int _sizeY);
-    void begin(int _latchPin, int _oePin);
+    void begin();
     void drawPixel(int16_t, int16_t, uint16_t); 
     void setPixel(int16_t x, int16_t y, uint16_t color);
+
     void update(void);
     void updatePanel(int panel);
     
@@ -50,7 +54,7 @@ class FlipDot {
 
     byte fdRow1, fdRow2, fdCtrl;
  
-    int latchPin, oePin;
+    int latchPin, oePin, resPin, colPin;
     int sizeX, sizeY;
 };
 
