@@ -5,7 +5,7 @@
 #endif
 #include <SPI.h>
 
-#include "FlipDot.h"
+#include "Flipdot.h"
 
 FlipDot::FlipDot(int _sizeX, int _sizeY)
 {

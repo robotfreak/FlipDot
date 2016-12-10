@@ -27,6 +27,7 @@
 //     S SMALL
 //     M MEDIUM
 //     L LARGE
+//     X EXTRALARGE
 //   String:
 //     Contains the characters to be printed 
 //   "\": 
@@ -97,7 +98,8 @@ void loop() {
       fontSize = commandLine.charAt(cmdPtr);
       if (fontSize == 'S') fsize = SMALL;
       else if (fontSize == 'M') fsize = MEDIUM;
-      else fsize = LARGE;
+      else if (fontSize == 'L') fsize = LARGE;
+      else fsize = EXTRALARGE;
       
       cmdPtr+=2;
       outputString="";

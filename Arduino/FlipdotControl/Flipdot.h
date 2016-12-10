@@ -22,6 +22,7 @@ const byte COL = 4;
 #define SMALL 0
 #define MEDIUM 1
 #define LARGE 2
+#define EXTRALARGE 3
 
 #define FLIPDOT_BLACK          0
 #define FLIPDOT_YELLOW         1  
