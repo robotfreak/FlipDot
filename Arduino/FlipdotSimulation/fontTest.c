@@ -163,9 +163,11 @@ int printChar8x14v(int xOffs, int yOffs, int color, unsigned char c) {
 */
 int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
 	unsigned char x,y,wL,wH, ctmp;
-	ctmp = c-32;
+    ctmp = c-32;
+	if (ctmp >=64) ctmp -= 32; // only big lettess allowed
+
         if (ctmp >=32) ctmp +=32;
-        else if (ctmp >=64) ctmp +=64;
+        
           for (x=0; x<9; x++) {   
 		wL=font9x16v[ctmp*FONT_WIDTH+x];
                 wH=font9x16v[ctmp*FONT_WIDTH+FONT_WIDTH*32+x];
@@ -197,7 +199,8 @@ int printString(int xOffs, int yOffs, int color, int size, const char *s) {
 		  case XSMALL: x = printChar5x8v(x, y, color, s[i]); break;
 		  case SMALL: x = printChar6x8v(x, y, color, s[i]); break;
 		  case MEDIUM: x = printChar8x8(x, y, color, s[i]); break;
-		  case LARGE: x = printChar9x16v(x, y, color, s[i]); break;
+		  case LARGE: x = printChar8x12(x, y, color, s[i]); break;
+		  case XLARGE: x = printChar9x16v(x, y, color, s[i]); break;
 		  default: x = printChar6x8(x, y, color, s[i]);
 	    }
 		i++;
@@ -266,7 +269,6 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, const cha
               xo+=xt;
             }
           }
-          printf("\n");
           ys-=yt;
           yo+=yt;
         }
@@ -352,6 +354,16 @@ int main(int argc, char *argv[]) {
 
     clearFrameBuffer(OFF);
     i = printString(2,0,ON,LARGE,"ABCDXYZ");
+    printFrameBuffer();
+    printf("\n\n");
+
+    clearFrameBuffer(OFF);
+    i = printString(2,0,ON,XLARGE,"12345678");
+    printFrameBuffer();
+    printf("\n\n");
+
+    clearFrameBuffer(OFF);
+    i = printString(2,0,ON,XLARGE,"abcdefgh");
     printFrameBuffer();
     printf("\n\n");
 
