@@ -82,7 +82,7 @@ int hex2int(char *hex) {
 // ySize = vertical sizw of the bitmap
 // s = string
 //============================================
-int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, const char *s) {
+int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, String s) {
   int i, x, y, xs, ys, xt, yt, xo, yo, w;
   char stmp[3];
 
@@ -103,8 +103,8 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, const cha
           xo = 0;
           while (xs > 0)
           {
-            stmp[0] = s[i];
-            stmp[1] = s[i + 1];
+            stmp[0] = s.charAt(i);
+            stmp[1] = s.charAt(i+1);
             stmp[2] = 0;
             w = hex2int(stmp);
             //printf("w=%0x x=%d y=%d\n", w, xo, y+yo);
