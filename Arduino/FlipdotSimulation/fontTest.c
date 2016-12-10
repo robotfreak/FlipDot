@@ -6,12 +6,13 @@
 /////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <inttypes.h>
 #include "font5x8v.h"
 #include "font6x8.h"
 #include "font6x8v.h"
 #include "font8x8.h"
 #include "font8x12.h"
-#include "font8x14v.h"
+//#include "font8x14v.h"
 #include "font9x16.h"
 
 //================== Constants ===============================
@@ -143,7 +144,7 @@ int printChar8x12(int xOffs, int yOffs, int color, unsigned char c) {
     }
     return(xOffs+9);
 }
-
+/*
 int printChar8x14v(int xOffs, int yOffs, int color, unsigned char c) {
 	unsigned char x,y,wH,wL, ctmp;
 	ctmp = c-32;  
@@ -159,7 +160,7 @@ int printChar8x14v(int xOffs, int yOffs, int color, unsigned char c) {
     }
     return(xOffs+6);
 }
-
+*/
 int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
 	unsigned char x,y,wL,wH, ctmp;
 	ctmp = c-32;
@@ -196,12 +197,82 @@ int printString(int xOffs, int yOffs, int color, int size, const char *s) {
 		  case XSMALL: x = printChar5x8v(x, y, color, s[i]); break;
 		  case SMALL: x = printChar6x8v(x, y, color, s[i]); break;
 		  case MEDIUM: x = printChar8x8(x, y, color, s[i]); break;
-		  case LARGE: x = printChar8x14v(x, y, color, s[i]); break;
-		  case XLARGE: x = printChar9x16v(x, y, color, s[i]); break;
+		  case LARGE: x = printChar9x16v(x, y, color, s[i]); break;
 		  default: x = printChar6x8(x, y, color, s[i]);
 	    }
 		i++;
 	}
+	return(x);
+}
+
+int hex2int(char *hex) {
+    int val = 0;
+    while (*hex) {
+        // get current character then increment
+        uint8_t byte = *hex++; 
+        // transform hex character to the 4bit equivalent number, using the ascii table indexes
+        if (byte >= '0' && byte <= '9') byte = byte - '0';
+        else if (byte >= 'a' && byte <='f') byte = byte - 'a' + 10;
+        else if (byte >= 'A' && byte <='F') byte = byte - 'A' + 10;    
+        // shift 4 to make space for new digit, and add the 4 bits of the new digit 
+        val = (val << 4) | (byte & 0xF);
+    }
+    return val;
+}
+
+//============================================
+// printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, char *s) 
+// xOffs = position of the left side of the bitmap
+// yOffs = position of the top of the bitmap
+// color = ON means yellow, OFF means black
+// xSize = horizontal size of the bitmap
+// ySize = vertical sizw of the bitmap
+// s = string
+//============================================
+int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, const char *s) {
+	int i,x,y,xs,ys,xt,yt,xo,yo,w;
+    char stmp[3];
+	
+	i=0;
+    
+    if (xSize >0 && xSize <=X_SIZE && ySize > 0 && ySize <= Y_PIXELS )
+    {
+      while ((s[i] !='\0')&&(i<200)) 
+      {
+        ys = ySize;
+        yo = 0;
+        while (ys>0)
+        {
+          if (ys < 8) yt = ys; else yt = 8;
+          for(y=0; y<yt; y++)
+          {
+     	    xs = xSize;
+            xo = 0;
+            while (xs>0)
+            { 
+              stmp[0] = s[i];
+              stmp[1] = s[i+1];
+              stmp[2] = 0;
+              w = hex2int(stmp);
+              //printf("w=%0x x=%d y=%d\n", w, xo, y+yo);
+              i += 2;
+              if (xs < 8) xt = xs; else xt = 8;
+              for(x=0; x<xt; x++)
+              {
+                if (w&1) setFrameBuffer(xt-1-x+xo+xOffs,y+yo+yOffs,color);
+                w=w>>1;
+              }
+              xs-=xt;
+              xo+=xt;
+            }
+          }
+          printf("\n");
+          ys-=yt;
+          yo+=yt;
+        }
+ 	  }
+    }
+    else printf("error size, x %d, y %d", xSize, ySize);
 	return(x);
 }
 
@@ -261,27 +332,39 @@ int main(int argc, char *argv[]) {
 	int i,j;
     	
     clearFrameBuffer(OFF);
-    i = printString(2,0,ON,XSMALL,"ABCXYZ");
+    i = printString(1,0,ON,XSMALL,"ABCDEFGHIJKLM");
+    i = printString(1,5,ON,XSMALL,"noqrstuvwxyz");
+    i = printString(1,11,ON,XSMALL,"1234567890!=()");
     printFrameBuffer();
     printf("\n\n");
 
     clearFrameBuffer(OFF);
-    i = printString(2,0,ON,SMALL,"ABCXYZ");
+    i = printString(1,0,ON,SMALL,"ABCDEFGHIJKLM");
+    i = printString(1,8,ON,SMALL,"noqrstuvwxyz");
     printFrameBuffer();
     printf("\n\n");
 
     clearFrameBuffer(OFF);
-    i = printString(2,0,ON,MEDIUM,"ABCXYZ");
+    i = printString(1,0,ON,MEDIUM,"ABCDEFGHIJKLM");
+    i = printString(1,8,ON,MEDIUM,"noqrstuvwxyz");
     printFrameBuffer();
     printf("\n\n");
 
     clearFrameBuffer(OFF);
-    i = printString(2,0,ON,LARGE,"ABCXYZ");
+    i = printString(2,0,ON,LARGE,"ABCDXYZ");
     printFrameBuffer();
     printf("\n\n");
 
     clearFrameBuffer(OFF);
-    i = printString(2,0,ON,XLARGE,"ABCXYZ");
+    //i =   printBitmap(0,0,ON,8,8,"1020408001020408");
+    i = printBitmap(2,0,ON,4,4,"09000906");
+    i = printBitmap(2,6,ON,4,4,"09000609");
+    i = printBitmap(2,12,ON,4,4,"09000f00");
+    i = printBitmap(12,0,ON,8,8,"0066660081423C00");
+    i = printBitmap(12,8,ON,8,8,"006666003C428100");
+    i = printBitmap(32,2,ON,8,9,"FF81422418244281FF");
+    i = printBitmap(42,0,ON,16,16,"1000010000100001111122224444888811112222444488881111222244448888");
+    i = printBitmap(60,0,ON,16,16,"FFFF800180018001800180018001FFFF8001800180018001800180018001FFFF");
  //   vLine(0,ON);
  //   vLine(77,ON);
  //   hLine(0,ON);

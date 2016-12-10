@@ -36,19 +36,31 @@ void FlipDot::drawPixel(int16_t x, int16_t y, uint16_t color) {
   setPixel(x,y,color);
 } 
 
+// Reverse the order of bits in a byte.
+// I.e. MSB is swapped with LSB, etc.
+byte FlipDot::bitReverse( byte x )
+{
+   x = ((x >> 1) & 0x55) | ((x << 1) & 0xaa);
+   x = ((x >> 2) & 0x33) | ((x << 2) & 0xcc);
+   x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
+   return x;    
+} 
+
 void FlipDot::setPixel(int16_t x, int16_t y, uint16_t color)
 {
-  int y2dot[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+//  int y2dot[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
   int idx, dot;
   if (y > 7) 
   {
     idx = 1;
-    dot = y2dot[y-8];
+    dot = (1 << (y-8));
+//    dot = y2dot[y-8];
   }
   else 
   {
     idx = 0;
-    dot = y2dot[y];
+    dot = (1 << y);
+//    dot = y2dot[y];
   }
   if (color)
     fdMtx[idx][x] |= dot;
@@ -65,16 +77,19 @@ void FlipDot::shiftOut(void)
   digitalWrite (this->latchPin, HIGH);
 }
 
-void FlipDot::update(void)
+void FlipDot::updatePanel(int panel)
 {
+  int f = 0;
   int col = 0;
-  // initial state
-  this->fdRow1 = 0x00;
-  this->fdRow2 = 0x00;
-  this->fdCtrl &= ~FD_PANEL_MASK;
+
+  if (panel < 0 || panel >= FD_PANELS)
+    return;
+
+  for (f = 0; f < panel; f++)
+    col += this->fdPanelSize[f];
+
+  f = panel;
   // shift out frames
-  for (int f = 0; f < FD_PANELS; f++)
-  {
     bitClear(this->fdCtrl, FD_COLUMN_SIG);
     bitClear(this->fdCtrl, FD_STROBE_SIG);
     bitSet  (this->fdCtrl, FD_FRAME_SIG);
@@ -113,8 +128,8 @@ void FlipDot::update(void)
       delayMicroseconds(15);
 
       bitClear(this->fdCtrl, FD_STROBE_SIG);
-      this->fdRow1 = fdMtx[0][col];
-      this->fdRow2 = fdMtx[1][col]; 
+    this->fdRow1 = bitReverse(fdMtx[0][col]);
+    this->fdRow2 = bitReverse(fdMtx[1][col]);
       shiftOut();
       delayMicroseconds(2000);
 
@@ -130,7 +145,18 @@ void FlipDot::update(void)
     delayMicroseconds(100);
     bitSet  (this->fdCtrl, FD_FRAME_SIG);
     shiftOut();
-  }
 }
 
+void FlipDot::update(void)
+{
+  // initial state
+  this->fdRow1 = 0x00;
+  this->fdRow2 = 0x00;
+  this->fdCtrl &= ~FD_PANEL_MASK;
+  // shift out frames
+  for (int f = 0; f < FD_PANELS; f++)
+  {
+    updatePanel(f);
+  }
+}
 

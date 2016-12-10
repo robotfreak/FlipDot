@@ -35,10 +35,12 @@ class FlipDot : public Adafruit_GFX {
     void begin(int _latchPin, int _oePin);
     void drawPixel(int16_t, int16_t, uint16_t); 
     void update(void);
+    void updatePanel(int panel);
     
 
   private:
     void setPixel(int16_t x, int16_t y, uint16_t color);
+    byte bitReverse(byte x);
     void shiftOut(void);
     
 //    byte fdPanelSize[FD_PANELS] = {25, 25}; //, 20, 20, 25};
