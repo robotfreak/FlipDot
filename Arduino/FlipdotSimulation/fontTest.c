@@ -3,6 +3,8 @@
 //  Flipdot display. Here the content of the display is printed
 //  to stdout.
 //  CC-BY SA NC 2016 c-hack.de    ralf@surasto.de
+//  added support for 9x16 font   by robotfreak
+//  added support for graphics    by robotfreak
 /////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
