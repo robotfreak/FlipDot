@@ -10,10 +10,11 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "font6x8v.h"
 
 //================== Constants ===============================
-#define X_SIZE 78    // 128 column
+#define X_SIZE 50    // 128 column
 #define Y_SIZE 2      // 28 rows (represented by 4 bytes)
 #define Y_PIXELS 16   // True Y-Size if the display
 #define OFF 0
@@ -119,6 +120,15 @@ int printString(int xOffs, int yOffs, int color, int size, const char *s) {
 	return(x);
 }
 
+void setCursorPos(int XPos, int YPos)
+{
+ printf("\033[%d;%dH", YPos+1, XPos+1);
+}
+
+void clearScreen() 
+{
+  printf("\033[2J");
+}
 
 //============================================
 // DEBUG ONLY
@@ -129,9 +139,11 @@ void printFrameBuffer() {
 	int x,y,bitNo,maxBits;
 	unsigned char w;
 	
-	maxBits=8;
+   	maxBits=8;
+    setCursorPos(0, 0);
+
     for (y=0; y<Y_SIZE; y++) {
-	   w = 1;   // most right bit set
+    w = 1;   // most right bit set
 	   if (y == Y_SIZE-1) {
 		   maxBits = 8 - Y_SIZE*8 % Y_PIXELS;
 	   } 
@@ -140,6 +152,7 @@ void printFrameBuffer() {
 			   if (frameBuffer[x][y] & w) printf("#"); else printf(".");
 		   }  
 		   w = w<<1; 
+       
 		   printf("\n");
 	   }
     }
@@ -151,7 +164,7 @@ void printFrameBuffer() {
 bool gameBoard[NUMROWS][NUMCOLS];
 bool newGameBoard[NUMROWS][NUMCOLS];
 
-     int random(int min_num, int max_num)
+     int randomInt(int min_num, int max_num)
         {
             int result=0,low_num=0,hi_num=0;
             if(min_num<max_num)
@@ -172,11 +185,11 @@ void perturbInitialGameBoard() {
   int row, col;
   int numChanges, i;
 
-  numChanges = random(20,100);
-  printf("numChanges: %d\n", numChanges);
+  numChanges = randomInt(20,100);
+  //printf("numChanges: %d\n", numChanges);
   for ( i=0; i<numChanges; i++) {
-     row = random(0, NUMROWS);
-     col = random(0, NUMCOLS);
+     row = randomInt(0, NUMROWS);
+     col = randomInt(0, NUMCOLS);
      if (gameBoard[row][col] == 1) gameBoard[row][col] = 0; 
      else gameBoard[row][col] = 1; 
   }
@@ -193,23 +206,24 @@ void initGameBoard() {
       }
     }
   }
-  gameBoard[12][2] = 1;
-  gameBoard[12][3] = 1;
-  gameBoard[13][1] = 1;
-  gameBoard[13][2] = 1;
-  gameBoard[14][2] = 1;
 
-  //perturbInitialGameBoard();
-
+  // glider
+/*  
+  gameBoard[23][4] = 1;
+  gameBoard[24][5] = 1;
+  gameBoard[22][6] = 1;
+  gameBoard[23][6] = 1;
+  gameBoard[24][6] = 1;
+*/
   // acorn
 
-  gameBoard[33][2] = 1;
-  gameBoard[34][2] = 1;
-  gameBoard[34][4] = 1;
-  gameBoard[36][3] = 1;
-  gameBoard[37][2] = 1;
-  gameBoard[38][2] = 1;
-  gameBoard[39][2] = 1;
+  gameBoard[28][7] = 1;
+  gameBoard[30][8] = 1;
+  gameBoard[27][9] = 1;
+  gameBoard[28][9] = 1;
+  gameBoard[31][9] = 1;
+  gameBoard[32][9] = 1;
+  gameBoard[33][9] = 1;
 
   perturbInitialGameBoard();
 
@@ -308,8 +322,6 @@ void swapGameBoards() {
 
 void showGameBoard() {
   displayGameBoard();
-  //delay(250);
-  // Calculate the next iteration
   calculateNewGameBoard();
   swapGameBoards();
 }
@@ -317,10 +329,12 @@ void showGameBoard() {
 //############################# Main ###############################	
 int main(int argc, char *argv[]) {   
 
+  clearScreen();
   clearFrameBuffer(OFF);
-  printString(2,2,ON,LARGE,"Game of Life");
+  printString(1,1,ON,LARGE,"Game of");
+  printString(9,9,ON,LARGE,"Life");
   printFrameBuffer();
-  printf("\n\n");
+  sleep(3);
 
   initGameBoard();
 
@@ -329,7 +343,7 @@ int main(int argc, char *argv[]) {
     clearFrameBuffer(OFF);
     showGameBoard();
     printFrameBuffer();
-    printf("\n\n");
+    usleep(100000);
   }
 
 } 
