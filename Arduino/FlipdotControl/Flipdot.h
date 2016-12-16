@@ -14,7 +14,8 @@ const byte COL = 4;
 
 #define SET 1
 #define RESET 0
-#define OFF -1
+#define OFF 0
+#define ON 1
 
 #define YELLOW 1
 #define BLACK 0
@@ -22,7 +23,7 @@ const byte COL = 4;
 #define SMALL 0
 #define MEDIUM 1
 #define LARGE 2
-#define EXTRALARGE 3
+#define XLARGE 3
 
 #define FLIPDOT_BLACK          0
 #define FLIPDOT_YELLOW         1  
@@ -45,7 +46,6 @@ class FlipDot {
   public: 
     FlipDot(int _sizeX, int _sizeY);
     void begin();
-    void drawPixel(int16_t, int16_t, uint16_t); 
     void setPixel(int16_t x, int16_t y, uint16_t color);
 
     void update(void);
@@ -59,7 +59,6 @@ class FlipDot {
 //    byte fdPanelSelect[FD_PANELS] = {FD_PANEL1_SIG, FD_PANEL2_SIG}; //, FD_PANEL3_SIG, FD_PANEL4_SIG, FD_PANEL5_SIG};
     byte fdPanelSize[FD_PANELS] = {25, 25, 20, 20, 25};
     byte fdPanelSelect[FD_PANELS] = {FD_PANEL1_SIG, FD_PANEL2_SIG, FD_PANEL3_SIG, FD_PANEL4_SIG, FD_PANEL5_SIG};
-    boolean *displayBuffer = NULL;
  
     byte fdMtx[2][FD_COLUMS];
 

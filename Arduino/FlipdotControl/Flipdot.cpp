@@ -5,15 +5,13 @@
 #endif
 #include <SPI.h>
 
-#include "Flipdot.h"
+#include "FlipDot.h"
 
 FlipDot::FlipDot(int _sizeX, int _sizeY)
 {
   this->sizeX = _sizeX;
   this->sizeY = _sizeY;
 //  this->invert = invert; 
-  displayBuffer = (boolean*) calloc(FD_COLUMS*2, sizeof(boolean));
-
 }
 
 void FlipDot::begin()
@@ -37,12 +35,6 @@ void FlipDot::begin()
   digitalWrite (this->oePin, LOW);
   digitalWrite (this->colPin, HIGH);
 }
-
-void FlipDot::drawPixel(int16_t x, int16_t y, uint16_t color) {
-  if (x >= this->sizeX || y >= this->sizeY) return;
-  displayBuffer[y*this->sizeY+x] = (color);
-  setPixel(x,y,color);
-} 
 
 // Reverse the order of bits in a byte.
 // I.e. MSB is swapped with LSB, etc.
