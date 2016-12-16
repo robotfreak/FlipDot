@@ -14,7 +14,7 @@
 #include "font6x8v.h"
 
 //================== Constants ===============================
-#define X_SIZE 50   // 128 column
+#define X_SIZE 40   // 128 column
 #define Y_SIZE 2    // 28 rows (represented by 4 bytes)
 #define Y_PIXELS 16 // True Y-Size if the display
 #define OFF 0
@@ -243,16 +243,31 @@ void initGameBoard()
   gameBoard[23][6] = 1;
   gameBoard[24][6] = 1;
 */
-  // acorn
+  /* r pentomino */
+  gameBoard[16][8] = 1;
+  gameBoard[17][7] = 1;
+  gameBoard[17][8] = 1;
+  gameBoard[17][9] = 1;
+  gameBoard[18][7] = 1;
 
-  gameBoard[28][7] = 1;
-  gameBoard[30][8] = 1;
-  gameBoard[27][9] = 1;
-  gameBoard[28][9] = 1;
-  gameBoard[31][9] = 1;
-  gameBoard[32][9] = 1;
-  gameBoard[33][9] = 1;
-
+  /* die hard 
+  gameBoard[16][8] = 1;
+  gameBoard[17][8] = 1;
+  gameBoard[17][9] = 1;
+  gameBoard[21][9] = 1;
+  gameBoard[22][8] = 1;
+  gameBoard[22][9] = 1;
+  gameBoard[23][9] = 1;
+*/  
+  /* acorn 
+  gameBoard[17][9] = 1;
+  gameBoard[18][7] = 1;
+  gameBoard[18][9] = 1;
+  gameBoard[20][8] = 1;
+  gameBoard[21][9] = 1;
+  gameBoard[22][9] = 1;
+  gameBoard[23][9] = 1;
+*/
   perturbInitialGameBoard();
 }
 /**
@@ -385,15 +400,19 @@ int main(int argc, char *argv[])
 
   clearScreen();
   clearFrameBuffer(OFF);
-  printString(1, 1, ON, LARGE, "Game of");
-  printString(9, 9, ON, LARGE, "Life");
+  printString(0, 1, ON, LARGE, "Game of");
+  printString(8, 9, ON, LARGE, "Life");
   printFrameBuffer();
   sleep(3);
 
   initGameBoard();
+  clearFrameBuffer(OFF);
+  showGameBoard();
+  printFrameBuffer();
+  sleep(1);
   iterations++;
 
-  while (true)
+  while (iterations < 250)
   {
     clearFrameBuffer(OFF);
     showGameBoard();

@@ -269,7 +269,7 @@ int printChar6x8v(int xOffs, int yOffs, int color, unsigned char c) {
   unsigned char x, y, w, ctmp;
   ctmp = c - 32;
   for (x = 0; x < 6; x++) {
-    w = font6x8v[ctmp][x];
+    w = pgm_read_byte(&(font6x8v[ctmp][x]));
     for (y = 0; y < 8; y++) {
       if (w & 1) {
         setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
@@ -320,8 +320,8 @@ int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
   if (ctmp >= 32) ctmp += 32;
   else if (ctmp >= 64) ctmp += 64;
   for (x = 0; x < 9; x++) {
-    wL = font9x16v[ctmp * FONT_WIDTH + x];
-    wH = font9x16v[ctmp * FONT_WIDTH + FONT_WIDTH * 32 + x];
+    wL = pgm_read_byte(&(font9x16v[ctmp * FONT_WIDTH + x]));
+    wH = pgm_read_byte(&(font9x16v[ctmp * FONT_WIDTH + FONT_WIDTH * 32 + x]));
     for (y = 0; y < 8; y++) {
       if (wH & 1) {
         setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
