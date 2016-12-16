@@ -19,7 +19,7 @@
 
 
 //================== Constants ===============================
-#define X_SIZE 40   // 128 column
+#define X_SIZE 50   // 128 column
 #define Y_SIZE 2    // 28 rows (represented by 4 bytes)
 #define Y_PIXELS 16 // True Y-Size if the display
 #define OFF 0
@@ -87,6 +87,28 @@ void setFrameBuffer(int x, int y, int value)
       frameBuffer[x][yByteNo] = frameBuffer[x][yByteNo] & wNot; // Logical AND set one bit to zero in the existing byte
     }
   }
+}
+
+//===========================================
+// getFrameBuffer(int x, int y)
+// Get one Pixel at x,y-Position
+// value can be ON or OFF
+//===========================================
+int getFrameBuffer(int x, int y)
+{
+  unsigned char w, wNot;
+  int yByteNo, yBitNo;
+  int value = 0;
+
+  w = 1;
+  if ((y < 8 * Y_SIZE) && (x < X_SIZE) && (x >= 0) && (y >= 0))
+  {
+    yByteNo = y / 8; // integer division to select the byte
+    yBitNo = y % 8;  // module division (residual) to select the bit in that byte
+    w = w << yBitNo;
+    if (frameBuffer[x][yByteNo] & w) value = 1; else value = 0;
+  }
+  return value;
 }
 
 //============================================
@@ -194,11 +216,12 @@ void printFrameBuffer()
   }
 }
 
-#define NUMROWS X_SIZE
-#define NUMCOLS Y_PIXELS
+#define NUMROWS Y_PIXELS
+#define NUMCOLS X_SIZE
 
-bool gameBoard[NUMROWS][NUMCOLS];
+//bool gameBoard[NUMROWS][NUMCOLS];
 bool newGameBoard[NUMROWS][NUMCOLS];
+
 
 int randomInt(int min_num, int max_num)
 {
@@ -220,7 +243,7 @@ int randomInt(int min_num, int max_num)
 
 void perturbInitialGameBoard()
 {
-  int row, col;
+  int row, col, val;
   int numChanges, i;
 
   numChanges = randomInt(20, 100);
@@ -229,10 +252,11 @@ void perturbInitialGameBoard()
   {
     row = randomInt(0, NUMROWS);
     col = randomInt(0, NUMCOLS);
-    if (gameBoard[row][col] == 1)
-      gameBoard[row][col] = 0;
+    val = getFrameBuffer(col, row);    
+    if (val)
+      setFrameBuffer(col,row, 0);
     else
-      gameBoard[row][col] = 1;
+      setFrameBuffer(col,row, 1);
   }
 }
 
@@ -241,11 +265,12 @@ void initGameBoard()
   {
     uint8_t row, col;
 
+    clearFrameBuffer(OFF);
     for (row = 0; row < NUMROWS; row++)
     {
       for (col = 0; col < NUMCOLS; col++)
       {
-        gameBoard[row][col] = 0;
+        //gameBoard[row][col] = 0;
         newGameBoard[row][col] = 0;
       }
     }
@@ -253,55 +278,38 @@ void initGameBoard()
 
   // glider
   /*  
-  gameBoard[23][4] = 1;
-  gameBoard[24][5] = 1;
-  gameBoard[22][6] = 1;
-  gameBoard[23][6] = 1;
-  gameBoard[24][6] = 1;
+  setFrameBuffer(23,4,1);
+  setFrameBuffer(24,5,1);
+  setFrameBuffer(22,6,1);
+  setFrameBuffer(23,6,1);
+  setFrameBuffer(24,6,1);
 */
   /* r pentomino */
-  gameBoard[16][8] = 1;
-  gameBoard[17][7] = 1;
-  gameBoard[17][8] = 1;
-  gameBoard[17][9] = 1;
-  gameBoard[18][7] = 1;
+  setFrameBuffer(16,8,1);
+  setFrameBuffer(17,7,1);
+  setFrameBuffer(17,8,1);
+  setFrameBuffer(17,9,1);
+  setFrameBuffer(18,7,1);
 
   /* die hard 
-  gameBoard[16][8] = 1;
-  gameBoard[17][8] = 1;
-  gameBoard[17][9] = 1;
-  gameBoard[21][9] = 1;
-  gameBoard[22][8] = 1;
-  gameBoard[22][9] = 1;
-  gameBoard[23][9] = 1;
+  setFrameBuffer(16,8,1);
+  setFrameBuffer(17,8,1);
+  setFrameBuffer(17,9,1);
+  setFrameBuffer(21,9,1);
+  setFrameBuffer(22,8,1);
+  setFrameBuffer(22,9,1);
+  setFrameBuffer(23,9,1);
 */  
   /* acorn 
-  gameBoard[17][9] = 1;
-  gameBoard[18][7] = 1;
-  gameBoard[18][9] = 1;
-  gameBoard[20][8] = 1;
-  gameBoard[21][9] = 1;
-  gameBoard[22][9] = 1;
-  gameBoard[23][9] = 1;
+  setFrameBuffer(17,9,1);
+  setFrameBuffer(18,7,1);
+  setFrameBuffer(18,9,1);
+  setFrameBuffer(20,8,1);
+  setFrameBuffer(21,9,1);
+  setFrameBuffer(22,9,1);
+  setFrameBuffer(23,9,1);
 */
   perturbInitialGameBoard();
-}
-/**
- * Loops over all game board positions, and briefly turns on any LEDs for "on" positions.
- */
-void displayGameBoard()
-{
-  uint8_t row, col;
-  for (row = 0; row < NUMROWS; row++)
-  {
-    for (col = 0; col < NUMCOLS; col++)
-    {
-      if (gameBoard[row][col])
-      {
-        setFrameBuffer(row, col, 1);
-      }
-    }
-  }
 }
 
 /**
@@ -314,7 +322,7 @@ bool isCellAlive(char row, char col)
   {
     return false;
   }
-  return (gameBoard[row][col] == 1);
+  return (getFrameBuffer(col,row));   //gameBoard[row][col] == 1);
 }
 
 /**
@@ -356,22 +364,22 @@ void calculateNewGameBoard()
     for (col = 0; col < NUMCOLS; col++)
     {
       numNeighbors = countNeighbors(row, col);
-      if (gameBoard[row][col] && numNeighbors < 2)
+      if (getFrameBuffer(col,row) && numNeighbors < 2)
       {
         // Any live cell with fewer than two live neighbours dies, as if caused by under-population.
         newGameBoard[row][col] = false;
       }
-      else if (gameBoard[row][col] && (numNeighbors == 2 || numNeighbors == 3))
+      else if (getFrameBuffer(col,row) && (numNeighbors == 2 || numNeighbors == 3))
       {
         // Any live cell with two or three live neighbours lives on to the next generation.
         newGameBoard[row][col] = true;
       }
-      else if (gameBoard[row][col] && numNeighbors > 3)
+      else if (getFrameBuffer(col,row) && numNeighbors > 3)
       {
         // Any live cell with more than three live neighbours dies, as if by overcrowding.
         newGameBoard[row][col] = false;
       }
-      else if (!gameBoard[row][col] && numNeighbors == 3)
+      else if (!getFrameBuffer(col,row) && numNeighbors == 3)
       {
         //} else if (gameBoard[row][col] && numNeighbors == 3) {
         // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
@@ -396,14 +404,14 @@ void swapGameBoards()
   {
     for (col = 0; col < NUMCOLS; col++)
     {
-      gameBoard[row][col] = newGameBoard[row][col];
+      setFrameBuffer(col, row, newGameBoard[row][col]);
     }
   }
 }
 
 void showGameBoard()
 {
-  displayGameBoard();
+  //displayGameBoard();
   calculateNewGameBoard();
   swapGameBoards();
 }
@@ -422,15 +430,15 @@ int main(int argc, char *argv[])
   sleep(3);
 
   initGameBoard();
-  clearFrameBuffer(OFF);
+  //clearFrameBuffer(OFF);
   showGameBoard();
   printFrameBuffer();
   sleep(1);
   iterations++;
 
-  while (iterations < 250)
+  while (iterations < 300)
   {
-    clearFrameBuffer(OFF);
+    //clearFrameBuffer(OFF);
     showGameBoard();
     printFrameBuffer();
     printf("Iterations: %d     ", iterations++);

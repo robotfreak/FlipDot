@@ -8,7 +8,7 @@
 #include "font8x8.h"
 #include "font8x12.h"
 #include "font9x16.h"
-#include "flipdot.h"
+#include "Flipdot.h"
 
 //================== Constants ===============================
 #define X_SIZE 50    // 115 column

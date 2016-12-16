@@ -1,15 +1,15 @@
 #include <Arduino.h>
-#include "flipdot.h"
+#include "Flipdot.h"
 
 #define NUMROWS 16
-#define NUMCOLS 16
+#define NUMCOLS 50
 
-uint8_t gameBoard[NUMROWS][NUMCOLS];
+//uint8_t gameBoard[NUMROWS][NUMCOLS];
 uint8_t newGameBoard[NUMROWS][NUMCOLS];
 
 
 void perturbInitialGameBoard() {
-  int row, col;
+  int row, col, val;
   int numChanges, i;
 
   numChanges = random(20, 100);
@@ -17,8 +17,11 @@ void perturbInitialGameBoard() {
   for ( i = 0; i < numChanges; i++) {
     row = random(0, NUMROWS);
     col = random(0, NUMCOLS);
-    if (gameBoard[row][col] == 1) gameBoard[row][col] = 0;
-    else gameBoard[row][col] = 1;
+    val = getFrameBuffer(col, row);    
+    if (val)
+      setFrameBuffer(col,row, 0);
+    else
+      setFrameBuffer(col,row, 1);
   }
 }
 
@@ -26,48 +29,49 @@ void initGameBoard() {
   {
     uint8_t row, col;
 
-    for (row = 0; row < NUMROWS; row++) {
+   clearAll(OFF);
+   for (row = 0; row < NUMROWS; row++) {
       for (col = 0; col < NUMCOLS; col++) {
-        gameBoard[row][col] = 0;
+        //gameBoard[row][col] = 0;
         newGameBoard[row][col] = 0;
       }
     }
   }
-  //gameBoard[12][2] = 1;
-  //gameBoard[12][3] = 1;
-  //gameBoard[13][1] = 1;
-  //gameBoard[13][2] = 1;
-  //gameBoard[14][2] = 1;
+  // glider
+  /*  
+  setFrameBuffer(23,4,1);
+  setFrameBuffer(24,5,1);
+  setFrameBuffer(22,6,1);
+  setFrameBuffer(23,6,1);
+  setFrameBuffer(24,6,1);
+*/
+  /* r pentomino */
+  setFrameBuffer(16,8,1);
+  setFrameBuffer(17,7,1);
+  setFrameBuffer(17,8,1);
+  setFrameBuffer(17,9,1);
+  setFrameBuffer(18,7,1);
 
-  //perturbInitialGameBoard();
-
-  // acorn
-
-  // acorn
-
-  gameBoard[7][9] = 1;
-  gameBoard[8][9] = 1;
-  gameBoard[8][7] = 1;
-  gameBoard[10][8] = 1;
-  gameBoard[11][9] = 1;
-  gameBoard[12][9] = 1;
-  gameBoard[13][9] = 1;
-
+  /* die hard 
+  setFrameBuffer(16,8,1);
+  setFrameBuffer(17,8,1);
+  setFrameBuffer(17,9,1);
+  setFrameBuffer(21,9,1);
+  setFrameBuffer(22,8,1);
+  setFrameBuffer(22,9,1);
+  setFrameBuffer(23,9,1);
+*/  
+  /* acorn 
+  setFrameBuffer(17,9,1);
+  setFrameBuffer(18,7,1);
+  setFrameBuffer(18,9,1);
+  setFrameBuffer(20,8,1);
+  setFrameBuffer(21,9,1);
+  setFrameBuffer(22,9,1);
+  setFrameBuffer(23,9,1);
+*/
   perturbInitialGameBoard();
 
-}
-/**
-   Loops over all game board positions, and briefly turns on any LEDs for "on" positions.
-*/
-void displayGameBoard() {
-  uint8_t row, col;
-  for (row = 0; row < NUMROWS; row++) {
-    for (col = 0; col < NUMCOLS; col++) {
-      if (gameBoard[row][col]) {
-        setPixel(col, row, 1);
-      }
-    }
-  }
 }
 
 /**
@@ -78,7 +82,7 @@ bool isCellAlive(char row, char col) {
   if (row < 0 || col < 0 || row >= NUMROWS || col >= NUMCOLS) {
     return false;
   }
-  return (gameBoard[row][col] == 1);
+  return (getFrameBuffer(col,row));
 }
 
 
@@ -114,19 +118,19 @@ void calculateNewGameBoard() {
   for ( row = 0; row < NUMROWS; row++) {
     for ( col = 0; col < NUMCOLS; col++) {
       numNeighbors = countNeighbors(row, col);
-      if (gameBoard[row][col] && numNeighbors < 2) {
+      if (getFrameBuffer(col,row) && numNeighbors < 2) {
         // Any live cell with fewer than two live neighbours dies, as if caused by under-population.
         newGameBoard[row][col] = false;
         //setPixel(col, row, 0);
-      } else if (gameBoard[row][col] && (numNeighbors == 2 || numNeighbors == 3)) {
+      } else if (getFrameBuffer(col,row) && (numNeighbors == 2 || numNeighbors == 3)) {
         // Any live cell with two or three live neighbours lives on to the next generation.
         newGameBoard[row][col] = true;
         //setPixel(col, row, 1);
-      } else if (gameBoard[row][col] && numNeighbors > 3) {
+      } else if (getFrameBuffer(col,row) && numNeighbors > 3) {
         // Any live cell with more than three live neighbours dies, as if by overcrowding.
         newGameBoard[row][col] = false;
         //setPixel(col, row, 0);
-      } else if (!gameBoard[row][col] && numNeighbors == 3) {
+      } else if (!getFrameBuffer(col,row) && numNeighbors == 3) {
         //} else if (gameBoard[row][col] && numNeighbors == 3) {
         // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
         newGameBoard[row][col] = true;
@@ -148,14 +152,14 @@ void swapGameBoards() {
   uint8_t row, col;
   for ( row = 0; row < NUMROWS; row++) {
     for ( col = 0; col < NUMCOLS; col++) {
-      gameBoard[row][col] = newGameBoard[row][col];
+      setFrameBuffer(col,row, newGameBoard[row][col]);
       //gameBoard[row][col] = getFrameBuffer(col, row);
     }
   }
 }
 
 void showGameBoard() {
-  displayGameBoard();
+  //displayGameBoard();
   //delay(250);
   // Calculate the next iteration
   calculateNewGameBoard();
@@ -172,10 +176,12 @@ void  GameOfLife(void) {
   delay(3000);
   iterations++;
   initGameBoard();
+  updatePanel();
+  delay(1000);
 
   while (iterations < 60)
   {
-    clearAll(OFF);
+    //clearAll(OFF);
     showGameBoard();
     //printFrameBuffer();
     updatePanel();
