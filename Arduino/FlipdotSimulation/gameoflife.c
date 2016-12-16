@@ -6,12 +6,17 @@
 //  CC-BY SA NC 2016 c-hack.de    ralf@surasto.de
 //  by RobotFreak  webmaster@robotfreak.de
 /////////////////////////////////////////////////////////////////
+#ifdef _WIN32
+#include <windows.h> 
+#endif
 
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include "font6x8v.h"
+
+
 
 //================== Constants ===============================
 #define X_SIZE 40   // 128 column
@@ -134,12 +139,23 @@ int printString(int xOffs, int yOffs, int color, int size, const char *s)
 
 void setCursorPos(int XPos, int YPos)
 {
+#ifdef _WIN32
+  COORD coord;
+  coord.X = XPos;
+  coord.Y = YPos;
+  SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+#else
   printf("\033[%d;%dH", YPos + 1, XPos + 1);
+#endif
 }
 
 void clearScreen()
 {
+#ifdef _WIN32
+  system("cls");
+#else
   printf("\033[2J");
+#endif
 }
 
 //============================================

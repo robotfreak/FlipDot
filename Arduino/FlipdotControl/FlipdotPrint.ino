@@ -6,16 +6,15 @@
 
 #include "font6x8.h"
 #include "font8x8.h"
-#include "font6x8v.h"
 #include "font8x12.h"
 #include "font9x16.h"
-#include "Flipdot.h"
+#include "flipdot.h"
 
 //================== Constants ===============================
-#define X_SIZE 115    // 115 column
+#define X_SIZE 50    // 115 column
 #define Y_SIZE 2      // 16 rows (represented by 2 bytes)
 #define Y_PIXELS 16   // True Y-Size if the display
-//#define OFF 0
+#define OFF 0
 #define ON 1
 
 //================ global Variables ==========================
@@ -30,14 +29,15 @@ unsigned char frameBuffer[X_SIZE][Y_SIZE];
 // Clears the entire framebuffer and flips every pixel
 // of the display
 // color = BLACK   all pixels set to black
-// color = YELLOW  all pixels set to yellow=====================================
+// color = YELLOW  all pixels set to yellow
+//====================================================
 void clearAll(int color) {
   int i, j;
 
+  Serial.println("C");
   for (i = 0; i < X_SIZE; i++) {
-    Serial.println(i);
     for (j = 0; j < Y_PIXELS; j++) {
-      setFrameBuffer(i, j, color);
+      //setFrameBuffer(i, j, color);
       setPixel(i, j, color);
     }
   }
@@ -54,10 +54,10 @@ void updatePanel(void)
 //====================================================
 void setPixel(int x, int y, int color) {
 
+  setFrameBuffer(x, y, color);
   flipdot.setPixel(x, y, color);
 
 }
-
 int hex2int(char *hex) {
   int val = 0;
   while (*hex) {
@@ -113,7 +113,7 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, String s)
             for (x = 0; x < xt; x++)
             {
               if (w & 1) {
-                setFrameBuffer(xt - 1 - x + xo + xOffs, y + yo + yOffs, color);
+                //setFrameBuffer(xt - 1 - x + xo + xOffs, y + yo + yOffs, color);
                 setPixel(xt - 1 - x + xo + xOffs, y + yo + yOffs, color);
               }
               w = w >> 1;
@@ -131,6 +131,7 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, String s)
   return (x);
 }
 
+
 //====================================================
 // Draws a horizotal line at row Y
 // color = BLACK   all pixels set to black
@@ -140,7 +141,7 @@ void hLine(int y, int color) {
   int i;
 
   for (i = 0; i < X_SIZE; i++) {
-    setFrameBuffer(i, y, color);
+    //setFrameBuffer(i, y, color);
     setPixel(i, y, color);
   }
 }
@@ -154,7 +155,7 @@ void vLine(int x, int color) {
   int i;
 
   for (i = 0; i < Y_PIXELS; i++) {
-    setFrameBuffer(x, i, color);
+    //setFrameBuffer(x, i, color);
     setPixel(x, i, color);
   }
 }
@@ -180,10 +181,10 @@ int printString(int xOffs, int yOffs, int color, int size, String s) {
 
   while ((i < s.length()) && (i < 100)) {
     switch (size) {
-      case SMALL: x = printChar6x8v(x, y, color, s.charAt(i)); break;
+      case SMALL: x = printChar6x8(x, y, color, s.charAt(i)); break;
       case MEDIUM: x = printChar8x8(x, y, color, s.charAt(i)); break;
       case LARGE: x = printChar8x12(x, y, color, s.charAt(i)); break;
-      case EXTRALARGE: x = printChar9x16v(x, y, color, s.charAt(i)); break;
+      case XLARGE: x = printChar9x16v(x, y, color, s.charAt(i)); break;
       default: x = printChar6x8(x, y, color, s[i]);
     }
     //Serial.print(s.charAt(i));
@@ -249,6 +250,7 @@ int getFrameBuffer(int x, int y) {
 // c = ASCII Character
 // returns new x position
 //============================================
+
 int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
   unsigned char x, y, w;
 
@@ -256,7 +258,7 @@ int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
     w = pgm_read_byte(&(font6x8[c][y]));  // Important: pgm_read_byte reads from the array in the flash memory
     for (x = 0; x < 8; x++) {
       if (w & 1) {
-        setFrameBuffer(x + xOffs, y + yOffs, color);
+        //setFrameBuffer(x+xOffs,y+yOffs,color);
         setPixel(x + xOffs, y + yOffs, color);
       }
       w = w >> 1;
@@ -264,15 +266,15 @@ int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
   }
   return (xOffs + 6);
 }
-
+#if 0
 int printChar6x8v(int xOffs, int yOffs, int color, unsigned char c) {
-  unsigned char x, y, w, ctmp;
+  unsigned int x, y, w, ctmp;
   ctmp = c - 32;
   for (x = 0; x < 6; x++) {
     w = pgm_read_byte(&(font6x8v[ctmp][x]));
     for (y = 0; y < 8; y++) {
       if (w & 1) {
-        setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
+        //setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
         setPixel(x + xOffs, 7 - y + yOffs, color);
       }
       w = w >> 1;
@@ -280,15 +282,16 @@ int printChar6x8v(int xOffs, int yOffs, int color, unsigned char c) {
   }
   return (xOffs + 6);
 }
+#endif
 
 int printChar8x8(int xOffs, int yOffs, int color, unsigned char c) {
-  unsigned char x, y, w;
+  unsigned int x, y, w;
 
   for (y = 0; y < 8; y++) {
     w = pgm_read_byte(&(font8x8[c][y])); // Important: pgm_read_byte reads from the array in the flash memory
     for (x = 0; x < 8; x++) {
       if (w & 1) {
-        setFrameBuffer(x + xOffs, y + yOffs, color);
+        //setFrameBuffer(x+xOffs,y+yOffs,color);
         setPixel(x + xOffs, y + yOffs, color);
       }
       w = w >> 1;
@@ -305,7 +308,7 @@ int printChar8x12(int xOffs, int yOffs, int color, unsigned char c) {
     w = pgm_read_byte(&(font8x12[c][y])); // Important: pgm_read_byte reads from the array in the flash memory
     for (x = 0; x < 12; x++) {
       if (w & 1) {
-        setFrameBuffer(x + xOffs, y + yOffs, color);
+        //setFrameBuffer(x+xOffs,y+yOffs,color);
         setPixel(x + xOffs, y + yOffs, color);
       }
       w = w >> 1;
@@ -315,7 +318,7 @@ int printChar8x12(int xOffs, int yOffs, int color, unsigned char c) {
 }
 
 int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
-  unsigned char x, y, wL, wH, ctmp;
+  unsigned int x, y, wL, wH, ctmp;
   ctmp = c - 32;
   if (ctmp >= 32) ctmp += 32;
   else if (ctmp >= 64) ctmp += 64;
@@ -324,13 +327,13 @@ int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
     wH = pgm_read_byte(&(font9x16v[ctmp * FONT_WIDTH + FONT_WIDTH * 32 + x]));
     for (y = 0; y < 8; y++) {
       if (wH & 1) {
-        setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
+        //setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
         setPixel(x + xOffs, 7 - y + yOffs, color);
       }
       wH = wH >> 1;
 
       if (wL & 1) {
-        setFrameBuffer(x + xOffs, 15 - y + yOffs, color);
+        //setFrameBuffer(x + xOffs, 15 - y + yOffs, color);
         setPixel(x + xOffs, 15 - y + yOffs, color);
       }
       wL = wL >> 1;
@@ -364,14 +367,4 @@ void printFrameBuffer() {
   }
 }
 
-//===========================================
-// DEBUG ONLY
-// This is to check if reading from Flash
-// memory works
-// Using: pgm_read_byte
-//===========================================
-void printFont() {
-  int i;
 
-  for (i = 0; i < 256; i++) Serial.println(pgm_read_byte(&(font6x8[i][0])) );
-}

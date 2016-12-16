@@ -122,7 +122,7 @@ void loop() {
         if (fontSize == 'S') fsize = SMALL;
         else if (fontSize == 'M') fsize = MEDIUM;
         else if (fontSize == 'L') fsize = LARGE;
-        else fsize = EXTRALARGE;
+        else fsize = XLARGE;
       }
 
       cmdPtr += 2;
@@ -151,6 +151,7 @@ void loop() {
       // ======= Execute the respective command ========
       switch (cmd) {
         case 'C':  clearAll(color); Serial.println("C"); updatePanel(); break;
+        case 'G':  GameOfLife(); Serial.println("G"); break;
         case 'T':  printTest(yVal); Serial.println("T"); updatePanel(); break;
         case 'S':  setPixel(xVal, yVal, color); break;
         case 'H':  hLine(yVal, color); updatePanel(); break;
@@ -168,14 +169,80 @@ void loop() {
 // For debugging and testing only
 //===================================
 void printTest(int y) {
-  int i, j;
 
   clearAll(OFF);
-  //    printFont();
-  hLine(y, 1);
-  i = printString(2, 1, BLACK, MEDIUM, "Here is a short Text String !");
-  //    i = printString(2,15,YELLOW,LARGE,"Noch ein Test \x81");
-  //   i = printString(2,18,ON,"Passt das noch ?");
-  //    i=printChar(10,2,ON,'A');
+  i = printString(1, 0, ON, SMALL, "ABCDEFGHIJKLM");
+  i = printString(1, 8, ON, SMALL, "NOPQRSTUVWXYZ");
   printFrameBuffer();
+  updatePanel();
+  Serial.println("Small Font 6x8       ");
+  delay(2000);
+
+  clearAll(OFF);
+  i = printString(1, 0, ON, SMALL, "abcefghifklm");
+  i = printString(1, 8, ON, SMALL, "noqrstuvwxyz");
+  printFrameBuffer();
+  updatePanel();
+  delay(2000);
+
+  clearAll(OFF);
+  i = printString(1, 0, ON, MEDIUM, "ABCDEFGHIJKLM");
+  i = printString(1, 8, ON, MEDIUM, "NOPQRSTUVWXYZ");
+  printFrameBuffer();
+  updatePanel();
+  Serial.println("Medium Font 8x8      ");
+  delay(2000);
+
+  clearAll(OFF);
+  i = printString(1, 0, ON, MEDIUM, "abcefghifklm");
+  i = printString(1, 8, ON, MEDIUM, "noqrstuvwxyz");
+  printFrameBuffer();
+  updatePanel();
+  delay(2000);
+
+  clearAll(OFF);
+  i = printString(2, 2, ON, LARGE, "ABCDEFGHIJKLM");
+  printFrameBuffer();
+  Serial.println("Large Font 8x12      ");
+  updatePanel();
+  delay(2000);
+
+  clearAll(OFF);
+  i = printString(2, 2, ON, LARGE, "abcefghifklm");
+  printFrameBuffer();
+  updatePanel();
+  delay(2000);
+/*
+  clearAll(OFF);
+  i = printString(2, 0, ON, XLARGE, "ABCDEFGHIJKLM");
+  printFrameBuffer();
+  updatePanel();
+  Serial.println("Extra Large Font 9x16 ");
+  delay(2000);
+
+  clearAll(OFF);
+  i = printString(2, 0, ON, XLARGE, "12345678");
+  printFrameBuffer();
+  updatePanel();
+  delay(2000);
+*/
+  clearAll(OFF);
+  //i =   printBitmap(0,0,ON,8,8,"1020408001020408");
+  i = printBitmap(2, 0, ON, 4, 4, "09000906");
+  i = printBitmap(2, 6, ON, 4, 4, "09000609");
+  i = printBitmap(2, 12, ON, 4, 4, "09000f00");
+  i = printBitmap(12, 0, ON, 8, 8, "0066660081423C00");
+  i = printBitmap(12, 8, ON, 8, 8, "006666003C428100");
+  i = printBitmap(22, 2, ON, 5, 5, "0A1F1F0E04");
+  i = printBitmap(32, 2, ON, 8, 9, "FF81422418244281FF");
+  //i = printBitmap(42, 0, ON, 16, 16, "1000010000100001111122224444888811112222444488881111222244448888");
+  //i = printBitmap(60, 0, ON, 16, 16, "FFFF800180018001800180018001FFFF8001800180018001800180018001FFFF");
+  //   vLine(0,ON);
+  //   vLine(77,ON);
+  //   hLine(0,ON);
+  //   hLine(15,ON);
+  printFrameBuffer();
+  updatePanel();
+  Serial.println("Bitmap Grafik");
+  delay(2000);
 }

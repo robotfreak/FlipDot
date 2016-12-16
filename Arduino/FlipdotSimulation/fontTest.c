@@ -3,9 +3,12 @@
 //  Flipdot display. Here the content of the display is printed
 //  to stdout.
 //  CC-BY SA NC 2016 c-hack.de    ralf@surasto.de
-//  added support for 9x16 font   by robotfreak
-//  added support for graphics    by robotfreak
+//  added support for 9x16 font   by RobotFreak
+//  added support for graphics    by RobotFreak
 /////////////////////////////////////////////////////////////////
+#ifdef _WIN32
+#include <windows.h> 
+#endif
 
 #include <stdio.h>
 #include <inttypes.h>
@@ -358,12 +361,23 @@ void vLine(int x, int color)
 
 void setCursorPos(int XPos, int YPos)
 {
-    printf("\033[%d;%dH", YPos + 1, XPos + 1);
+#ifdef _WIN32
+  COORD coord;
+  coord.X = XPos;
+  coord.Y = YPos;
+  SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+#else
+  printf("\033[%d;%dH", YPos + 1, XPos + 1);
+#endif
 }
 
 void clearScreen()
 {
-    printf("\033[2J");
+#ifdef _WIN32
+  system("cls");
+#else
+  printf("\033[2J");
+#endif
 }
 
 //============================================
