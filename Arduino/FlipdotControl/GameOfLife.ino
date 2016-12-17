@@ -45,13 +45,13 @@ void initGameBoard() {
   setFrameBuffer(23,6,1);
   setFrameBuffer(24,6,1);
 */
-  /* r pentomino */
+  /* r pentomino 
   setFrameBuffer(16,8,1);
   setFrameBuffer(17,7,1);
   setFrameBuffer(17,8,1);
   setFrameBuffer(17,9,1);
   setFrameBuffer(18,7,1);
-
+*/
   /* die hard 
   setFrameBuffer(16,8,1);
   setFrameBuffer(17,8,1);
@@ -70,7 +70,7 @@ void initGameBoard() {
   setFrameBuffer(22,9,1);
   setFrameBuffer(23,9,1);
 */
-  perturbInitialGameBoard();
+ // perturbInitialGameBoard();
 
 }
 
@@ -176,6 +176,8 @@ void  GameOfLife(void) {
   delay(3000);
   iterations++;
   initGameBoard();
+  //printBitmap(24, 6, ON, 8, 8, "2008670000000000");   // acorn
+  printBitmap(24, 6, ON, 4, 4, "03060200");  // r-pentomino
   updatePanel();
   delay(1000);
 
