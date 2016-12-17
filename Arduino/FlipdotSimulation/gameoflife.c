@@ -217,7 +217,6 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, const cha
                         stmp[1] = s[i + 1];
                         stmp[2] = 0;
                         w = hex2int(stmp);
-                        //printf("w=%0x x=%d y=%d\n", w, xo, y+yo);
                         i += 2;
                         if (xs < 8)
                             xt = xs;
@@ -226,7 +225,10 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, const cha
                         for (x = 0; x < xt; x++)
                         {
                             if (w & 1)
+                            {
+                                //printf("x=%d y=%d\n",xt - 1 - x + xo + xOffs,  y + yo + yOffs);
                                 setFrameBuffer(xt - 1 - x + xo + xOffs, y + yo + yOffs, color);
+                            }
                             w = w >> 1;
                         }
                         xs -= xt;
@@ -516,9 +518,14 @@ int main(int argc, char *argv[])
 
   initGameBoard();
   //printBitmap(24, 6, ON, 8, 8, "2008670000000000");   // acorn
-  printBitmap(24, 6, ON, 4, 4, "03060200");  // r-pentomino
+  //printBitmap(24, 4, ON, 4, 8, "0705050005050700");   // 
+  //printBitmap(24, 2, ON, 8, 4, "02C04700");   // die hard
+  //printBitmap(20, 8, ON, 8, 6, "020b0a0820a0");   // infinity
+  //printBitmap(20, 8, ON, 5, 5, "1D10030D15");   // infinity2
+  printBitmap(4, 8, ON, 40, 1, "7FBE381FDF");   // infinity3
+  //printBitmap(24, 6, ON, 4, 4, "03060200");  // r-pentomino
   //clearFrameBuffer(OFF);
-  showGameBoard();
+  //showGameBoard();
   printFrameBuffer();
   sleep(1);
   iterations++;
