@@ -159,6 +159,91 @@ int printString(int xOffs, int yOffs, int color, int size, const char *s)
   return (x);
 }
 
+int hex2int(char *hex)
+{
+    int val = 0;
+    while (*hex)
+    {
+        // get current character then increment
+        uint8_t byte = *hex++;
+        // transform hex character to the 4bit equivalent number, using the ascii table indexes
+        if (byte >= '0' && byte <= '9')
+            byte = byte - '0';
+        else if (byte >= 'a' && byte <= 'f')
+            byte = byte - 'a' + 10;
+        else if (byte >= 'A' && byte <= 'F')
+            byte = byte - 'A' + 10;
+        // shift 4 to make space for new digit, and add the 4 bits of the new digit
+        val = (val << 4) | (byte & 0xF);
+    }
+    return val;
+}
+
+//============================================
+// printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, char *s)
+// xOffs = position of the left side of the bitmap
+// yOffs = position of the top of the bitmap
+// color = ON means yellow, OFF means black
+// xSize = horizontal size of the bitmap
+// ySize = vertical sizw of the bitmap
+// s = string
+//============================================
+int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, const char *s)
+{
+    int i, x, y, xs, ys, xt, yt, xo, yo, w;
+    char stmp[3];
+
+    i = 0;
+
+    if (xSize > 0 && xSize <= X_SIZE && ySize > 0 && ySize <= Y_PIXELS)
+    {
+        while ((s[i] != '\0') && (i < 200))
+        {
+            ys = ySize;
+            yo = 0;
+            while (ys > 0)
+            {
+                if (ys < 8)
+                    yt = ys;
+                else
+                    yt = 8;
+                for (y = 0; y < yt; y++)
+                {
+                    xs = xSize;
+                    xo = 0;
+                    while (xs > 0)
+                    {
+                        stmp[0] = s[i];
+                        stmp[1] = s[i + 1];
+                        stmp[2] = 0;
+                        w = hex2int(stmp);
+                        //printf("w=%0x x=%d y=%d\n", w, xo, y+yo);
+                        i += 2;
+                        if (xs < 8)
+                            xt = xs;
+                        else
+                            xt = 8;
+                        for (x = 0; x < xt; x++)
+                        {
+                            if (w & 1)
+                                setFrameBuffer(xt - 1 - x + xo + xOffs, y + yo + yOffs, color);
+                            w = w >> 1;
+                        }
+                        xs -= xt;
+                        xo += xt;
+                    }
+                }
+                ys -= yt;
+                yo += yt;
+            }
+        }
+    }
+    else
+        printf("error size, x %d, y %d", xSize, ySize);
+    return (x);
+}
+
+
 void setCursorPos(int XPos, int YPos)
 {
 #ifdef _WIN32
@@ -284,13 +369,13 @@ void initGameBoard()
   setFrameBuffer(23,6,1);
   setFrameBuffer(24,6,1);
 */
-  /* r pentomino */
+  /* r pentomino 
   setFrameBuffer(16,8,1);
   setFrameBuffer(17,7,1);
   setFrameBuffer(17,8,1);
   setFrameBuffer(17,9,1);
   setFrameBuffer(18,7,1);
-
+*/
   /* die hard 
   setFrameBuffer(16,8,1);
   setFrameBuffer(17,8,1);
@@ -309,7 +394,7 @@ void initGameBoard()
   setFrameBuffer(22,9,1);
   setFrameBuffer(23,9,1);
 */
-  perturbInitialGameBoard();
+ // perturbInitialGameBoard();
 }
 
 /**
@@ -430,6 +515,8 @@ int main(int argc, char *argv[])
   sleep(3);
 
   initGameBoard();
+  //printBitmap(24, 6, ON, 8, 8, "2008670000000000");   // acorn
+  printBitmap(24, 6, ON, 4, 4, "03060200");  // r-pentomino
   //clearFrameBuffer(OFF);
   showGameBoard();
   printFrameBuffer();
