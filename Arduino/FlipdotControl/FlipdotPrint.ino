@@ -31,7 +31,7 @@ unsigned char frameBuffer[X_SIZE][Y_SIZE];
 // color = BLACK   all pixels set to black
 // color = YELLOW  all pixels set to yellow
 //====================================================
-void clearAll(int color) {
+void clearFrameBuffer(int color) {
   int i, j;
 
   Serial.println("C");
@@ -45,6 +45,7 @@ void clearAll(int color) {
 
 void updatePanel(void)
 {
+  printFrameBuffer();
   flipdot.update();
 }
 //====================================================
@@ -223,19 +224,21 @@ void setFrameBuffer(int x, int y, int value) {
 //===========================================
 // int getFrameBuffer(int x, int y)
 // Gets color of one Pixel at x,y-Position
-// Value can be BLACK or YELLOW
+// returns value can be ON or OFF
 //===========================================
 int getFrameBuffer(int x, int y) {
   unsigned char w, wNot;
   int yByteNo, yBitNo;
+  int value = 0;
 
   w = 1;
   if ((y < 8 * Y_SIZE) && (x < X_SIZE) && (x >= 0) && (y >= 0)) {
     yByteNo = y / 8;  // integer division to select the byte
     yBitNo = y % 8;   // modulo division (residual) to select the bit in that byte
     w = w << yBitNo;
-    if (frameBuffer[x][yByteNo]&w > 0) return (1); else return (0);
+    if (frameBuffer[x][yByteNo] & w) value = 1; else value = 0;
   }
+  return value;
 }
 
 

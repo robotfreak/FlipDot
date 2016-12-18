@@ -25,53 +25,19 @@ void perturbInitialGameBoard() {
   }
 }
 
-void initGameBoard() {
-  {
-    uint8_t row, col;
+//===========================================
+// initGameBoard()
+// Initialises the game board 
+// set the start position bitmap
+//===========================================
+int initGameBoard(int xOffs, int yOffs, int xSize, int ySize, const char *s)
+//void initGameBoard()
+{
+  clearFrameBuffer(OFF);
+  memset(newGameBoard, 0, sizeof(newGameBoard));
+  printBitmap(xOffs, yOffs, ON, xSize, ySize, s);
 
-   clearAll(OFF);
-   for (row = 0; row < NUMROWS; row++) {
-      for (col = 0; col < NUMCOLS; col++) {
-        //gameBoard[row][col] = 0;
-        newGameBoard[row][col] = 0;
-      }
-    }
-  }
-  // glider
-  /*  
-  setFrameBuffer(23,4,1);
-  setFrameBuffer(24,5,1);
-  setFrameBuffer(22,6,1);
-  setFrameBuffer(23,6,1);
-  setFrameBuffer(24,6,1);
-*/
-  /* r pentomino 
-  setFrameBuffer(16,8,1);
-  setFrameBuffer(17,7,1);
-  setFrameBuffer(17,8,1);
-  setFrameBuffer(17,9,1);
-  setFrameBuffer(18,7,1);
-*/
-  /* die hard 
-  setFrameBuffer(16,8,1);
-  setFrameBuffer(17,8,1);
-  setFrameBuffer(17,9,1);
-  setFrameBuffer(21,9,1);
-  setFrameBuffer(22,8,1);
-  setFrameBuffer(22,9,1);
-  setFrameBuffer(23,9,1);
-*/  
-  /* acorn 
-  setFrameBuffer(17,9,1);
-  setFrameBuffer(18,7,1);
-  setFrameBuffer(18,9,1);
-  setFrameBuffer(20,8,1);
-  setFrameBuffer(21,9,1);
-  setFrameBuffer(22,9,1);
-  setFrameBuffer(23,9,1);
-*/
- // perturbInitialGameBoard();
-
+   // perturbInitialGameBoard();
 }
 
 /**
@@ -168,16 +134,20 @@ void showGameBoard() {
 
 void  GameOfLife(void) {
   int iterations = 0;
-  clearAll(OFF);
+  clearFrameBuffer(OFF);
   printString(1, 1, ON, MEDIUM, "Game of");
   printString(9, 9, ON, MEDIUM, "Life");
-  //printFrameBuffer();
   updatePanel();
   delay(3000);
   iterations++;
-  initGameBoard();
-  //printBitmap(24, 6, ON, 8, 8, "2008670000000000");   // acorn
-  printBitmap(24, 6, ON, 4, 4, "03060200");  // r-pentomino
+  //initGameBoard(24, 6, 4, 4, "03060200");  // r-pentomino
+  //initGameBoard(24, 6, 8, 8, "2008670000000000");   // acorn
+  //initGameBoard(24, 4, 4, 8, "0705050005050700");   // 
+  //initGameBoard(24, 2, 8, 4, "02C04700");   // die hard
+  //initGameBoard(20, 8, 8, 6, "020b0a0820a0");   // infinity
+  //initGameBoard(20, 8, 5, 5, "1D10030D15");   // infinity2
+  initGameBoard(20, 8, 40, 1, "7FBE381FDF");   // infinity3
+  //initGameBoard();
   updatePanel();
   delay(1000);
 

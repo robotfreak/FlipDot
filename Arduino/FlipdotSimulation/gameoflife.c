@@ -4,6 +4,7 @@
 //  http://brownsofa.org/blog/2010/12/30/arduino-8x8-game-of-life/
 //  Flipdot Simulator based on:
 //  CC-BY SA NC 2016 c-hack.de    ralf@surasto.de
+//  Porting to Annax Flipdot:
 //  by RobotFreak  webmaster@robotfreak.de
 /////////////////////////////////////////////////////////////////
 #ifdef _WIN32
@@ -14,9 +15,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include "font6x8v.h"
-
-
 
 //================== Constants ===============================
 #define X_SIZE 50   // 128 column
@@ -50,15 +50,10 @@ unsigned char frameBuffer[X_SIZE][Y_SIZE];
 //===========================================
 void clearFrameBuffer(int color)
 {
-  int x, y;
-  for (x = 0; x < X_SIZE; x++)
-    for (y = 0; y < Y_SIZE; y++)
-    {
-      if (color == ON)
-        frameBuffer[x][y] = 0xFF;
-      else
-        frameBuffer[x][y] = 0x00;
-    }
+  if (color == ON)
+    memset(frameBuffer, -1, sizeof(frameBuffer));
+  else
+    memset(frameBuffer, 0, sizeof(frameBuffer));
 }
 
 //===========================================
@@ -92,7 +87,7 @@ void setFrameBuffer(int x, int y, int value)
 //===========================================
 // getFrameBuffer(int x, int y)
 // Get one Pixel at x,y-Position
-// value can be ON or OFF
+// returns value can be ON or OFF
 //===========================================
 int getFrameBuffer(int x, int y)
 {
@@ -245,19 +240,26 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, const cha
     return (x);
 }
 
-
-void setCursorPos(int XPos, int YPos)
+//===========================================
+// setCursorPos(int xPos, int yPos)
+// Set the cursor at x,y-Position
+//===========================================
+void setCursorPos(int xPos, int yPos)
 {
 #ifdef _WIN32
   COORD coord;
-  coord.X = XPos;
-  coord.Y = YPos;
+  coord.X = xPos;
+  coord.Y = yPos;
   SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 #else
-  printf("\033[%d;%dH", YPos + 1, XPos + 1);
+  printf("\033[%d;%dH", yPos + 1, xPos + 1);
 #endif
 }
 
+//===========================================
+// clearScreen()
+// Clear the screen
+//===========================================
 void clearScreen()
 {
 #ifdef _WIN32
@@ -303,6 +305,10 @@ void printFrameBuffer()
   }
 }
 
+// *******************************************************
+// *    Game of Life functions                           *
+// *******************************************************
+
 #define NUMROWS Y_PIXELS
 #define NUMCOLS X_SIZE
 
@@ -310,6 +316,11 @@ void printFrameBuffer()
 bool newGameBoard[NUMROWS][NUMCOLS];
 
 
+//===========================================
+// randomInt(int min_num, int max_num)
+// calculates a random integer within the range
+// min_num, max_num
+//===========================================
 int randomInt(int min_num, int max_num)
 {
   int result = 0, low_num = 0, hi_num = 0;
@@ -328,6 +339,10 @@ int randomInt(int min_num, int max_num)
   return result;
 }
 
+//===========================================
+// perturbInitialGameBoard()
+// Do some random modification on the start bitmap
+//===========================================
 void perturbInitialGameBoard()
 {
   int row, col, val;
@@ -347,63 +362,27 @@ void perturbInitialGameBoard()
   }
 }
 
-void initGameBoard()
+//===========================================
+// initGameBoard()
+// Initialises the game board 
+// set the start position bitmap
+//===========================================
+int initGameBoard(int xOffs, int yOffs, int xSize, int ySize, const char *s)
+//void initGameBoard()
 {
-  {
-    uint8_t row, col;
+  clearFrameBuffer(OFF);
+  memset(newGameBoard, 0, sizeof(newGameBoard));
+  printBitmap(xOffs, yOffs, ON, xSize, ySize, s);
 
-    clearFrameBuffer(OFF);
-    for (row = 0; row < NUMROWS; row++)
-    {
-      for (col = 0; col < NUMCOLS; col++)
-      {
-        //gameBoard[row][col] = 0;
-        newGameBoard[row][col] = 0;
-      }
-    }
-  }
-
-  // glider
-  /*  
-  setFrameBuffer(23,4,1);
-  setFrameBuffer(24,5,1);
-  setFrameBuffer(22,6,1);
-  setFrameBuffer(23,6,1);
-  setFrameBuffer(24,6,1);
-*/
-  /* r pentomino 
-  setFrameBuffer(16,8,1);
-  setFrameBuffer(17,7,1);
-  setFrameBuffer(17,8,1);
-  setFrameBuffer(17,9,1);
-  setFrameBuffer(18,7,1);
-*/
-  /* die hard 
-  setFrameBuffer(16,8,1);
-  setFrameBuffer(17,8,1);
-  setFrameBuffer(17,9,1);
-  setFrameBuffer(21,9,1);
-  setFrameBuffer(22,8,1);
-  setFrameBuffer(22,9,1);
-  setFrameBuffer(23,9,1);
-*/  
-  /* acorn 
-  setFrameBuffer(17,9,1);
-  setFrameBuffer(18,7,1);
-  setFrameBuffer(18,9,1);
-  setFrameBuffer(20,8,1);
-  setFrameBuffer(21,9,1);
-  setFrameBuffer(22,9,1);
-  setFrameBuffer(23,9,1);
-*/
- // perturbInitialGameBoard();
+   // perturbInitialGameBoard();
 }
 
-/**
- * Returns whether or not the specified cell is on.
- * If the cell specified is outside the game board, returns false.
- */
-bool isCellAlive(char row, char col)
+//===========================================
+// isCellAlive(uint8_t row, uint8_t col)
+// Returns whether or not the specified cell is on.
+// If the cell specified is outside the game board, returns false.
+//===========================================
+bool isCellAlive(uint8_t row, uint8_t col)
 {
   if (row < 0 || col < 0 || row >= NUMROWS || col >= NUMCOLS)
   {
@@ -412,11 +391,12 @@ bool isCellAlive(char row, char col)
   return (getFrameBuffer(col,row));   //gameBoard[row][col] == 1);
 }
 
-/**
- * Counts the number of active cells surrounding the specified cell.
- * Cells outside the board are considered "off"
- * Returns a number in the range of 0 <= n < 9
- */
+//===========================================
+// countNeighbors(uint8_t row, uint8_t col)
+// Counts the number of active cells surrounding the specified cell.
+// Cells outside the board are considered "off"
+// Returns a number in the range of 0 <= n < 9
+//===========================================
 uint8_t countNeighbors(uint8_t row, uint8_t col)
 {
   uint8_t count = 0;
@@ -439,10 +419,12 @@ uint8_t countNeighbors(uint8_t row, uint8_t col)
   return count;
 }
 
-/**
- * Encodes the core rules of Conway's Game Of Life, and generates the next iteration of the board.
- * Rules taken from wikipedia.
- */
+//===========================================
+// calculateNewGameBoard()
+// Encodes the core rules of Conway's Game Of Life, 
+// and generates the next iteration of the board.
+// Rules taken from wikipedia.
+//===========================================
 void calculateNewGameBoard()
 {
   uint8_t row, col, numNeighbors;
@@ -468,7 +450,6 @@ void calculateNewGameBoard()
       }
       else if (!getFrameBuffer(col,row) && numNeighbors == 3)
       {
-        //} else if (gameBoard[row][col] && numNeighbors == 3) {
         // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
         newGameBoard[row][col] = true;
       }
@@ -481,9 +462,11 @@ void calculateNewGameBoard()
   }
 }
 
-/**
- * Copies the data from the new game board into the current game board array
- */
+//===========================================
+// swapGameBoards()
+// Copies the data from the new game board 
+// into the current game board array
+//===========================================
 void swapGameBoards()
 {
   uint8_t row, col;
@@ -496,6 +479,10 @@ void swapGameBoards()
   }
 }
 
+//===========================================
+// showGameBoard()
+// calculates new board and update the framebuffer
+//===========================================
 void showGameBoard()
 {
   //displayGameBoard();
@@ -516,23 +503,20 @@ int main(int argc, char *argv[])
   printFrameBuffer();
   sleep(3);
 
-  initGameBoard();
-  //printBitmap(24, 6, ON, 8, 8, "2008670000000000");   // acorn
-  //printBitmap(24, 4, ON, 4, 8, "0705050005050700");   // 
-  //printBitmap(24, 2, ON, 8, 4, "02C04700");   // die hard
-  //printBitmap(20, 8, ON, 8, 6, "020b0a0820a0");   // infinity
-  //printBitmap(20, 8, ON, 5, 5, "1D10030D15");   // infinity2
-  printBitmap(4, 8, ON, 40, 1, "7FBE381FDF");   // infinity3
-  //printBitmap(24, 6, ON, 4, 4, "03060200");  // r-pentomino
-  //clearFrameBuffer(OFF);
-  //showGameBoard();
+  //initGameBoard(24, 6, 4, 4, "03060200");  // r-pentomino
+  //initGameBoard(24, 6, 8, 8, "2008670000000000");   // acorn
+  //initGameBoard(24, 4, 4, 8, "0705050005050700");   // 
+  //initGameBoard(24, 2, 8, 4, "02C04700");   // die hard
+  //initGameBoard(20, 8, 8, 6, "020b0a0820a0");   // infinity
+  //initGameBoard(20, 8, 5, 5, "1D10030D15");   // infinity2
+  initGameBoard(20, 8, 40, 1, "7FBE381FDF");   // infinity3
+  //initGameBoard();
   printFrameBuffer();
   sleep(1);
   iterations++;
 
   while (iterations < 300)
   {
-    //clearFrameBuffer(OFF);
     showGameBoard();
     printFrameBuffer();
     printf("Iterations: %d     ", iterations++);
