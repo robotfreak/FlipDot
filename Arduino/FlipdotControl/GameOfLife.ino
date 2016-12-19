@@ -135,8 +135,8 @@ void showGameBoard() {
 void  GameOfLife(void) {
   int iterations = 0;
   clearFrameBuffer(OFF);
-  printString(1, 1, ON, MEDIUM, "Game of");
-  printString(9, 9, ON, MEDIUM, "Life");
+  printString(1, 1, ON, SMALL, "Game of");
+  printString(9, 9, ON, SMALL, "Life");
   updatePanel();
   delay(3000);
   iterations++;
@@ -146,7 +146,7 @@ void  GameOfLife(void) {
   //initGameBoard(24, 2, 8, 4, "02C04700");   // die hard
   //initGameBoard(20, 8, 8, 6, "020b0a0820a0");   // infinity
   //initGameBoard(20, 8, 5, 5, "1D10030D15");   // infinity2
-  initGameBoard(20, 8, 40, 1, "7FBE381FDF");   // infinity3
+  initGameBoard(1, 8, 40, 1, "7FBE381FDF");   // infinity3
   //initGameBoard();
   updatePanel();
   delay(1000);

@@ -61,6 +61,7 @@ class FlipDot {
     byte fdPanelSelect[FD_PANELS] = {FD_PANEL1_SIG, FD_PANEL2_SIG, FD_PANEL3_SIG, FD_PANEL4_SIG, FD_PANEL5_SIG};
  
     byte fdMtx[2][FD_COLUMS];
+    byte updPanel[FD_PANELS];
 
     byte fdRow1, fdRow2, fdCtrl;
  

@@ -37,8 +37,7 @@ void clearFrameBuffer(int color) {
   Serial.println("C");
   for (i = 0; i < X_SIZE; i++) {
     for (j = 0; j < Y_PIXELS; j++) {
-      //setFrameBuffer(i, j, color);
-      setPixel(i, j, color);
+      setFrameBuffer(i, j, color);
     }
   }
 }
@@ -56,9 +55,8 @@ void updatePanel(void)
 void setPixel(int x, int y, int color) {
 
   setFrameBuffer(x, y, color);
-  flipdot.setPixel(x, y, color);
-
 }
+
 int hex2int(char *hex) {
   int val = 0;
   while (*hex) {
@@ -114,8 +112,7 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, String s)
             for (x = 0; x < xt; x++)
             {
               if (w & 1) {
-                //setFrameBuffer(xt - 1 - x + xo + xOffs, y + yo + yOffs, color);
-                setPixel(xt - 1 - x + xo + xOffs, y + yo + yOffs, color);
+                setFrameBuffer(xt - 1 - x + xo + xOffs, y + yo + yOffs, color);
               }
               w = w >> 1;
             }
@@ -142,8 +139,7 @@ void hLine(int y, int color) {
   int i;
 
   for (i = 0; i < X_SIZE; i++) {
-    //setFrameBuffer(i, y, color);
-    setPixel(i, y, color);
+    setFrameBuffer(i, y, color);
   }
 }
 
@@ -156,8 +152,7 @@ void vLine(int x, int color) {
   int i;
 
   for (i = 0; i < Y_PIXELS; i++) {
-    //setFrameBuffer(x, i, color);
-    setPixel(x, i, color);
+    setFrameBuffer(x, i, color);
   }
 }
 
@@ -218,6 +213,7 @@ void setFrameBuffer(int x, int y, int value) {
       wNot = 0xFF - w;
       frameBuffer[x][yByteNo] = frameBuffer[x][yByteNo] & wNot; // Logical AND set one bit to zero in the existing byte
     }
+    flipdot.setPixel(x, y, value);
   }
 }
 
@@ -261,8 +257,7 @@ int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
     w = pgm_read_byte(&(font6x8[c][y]));  // Important: pgm_read_byte reads from the array in the flash memory
     for (x = 0; x < 8; x++) {
       if (w & 1) {
-        //setFrameBuffer(x+xOffs,y+yOffs,color);
-        setPixel(x + xOffs, y + yOffs, color);
+        setFrameBuffer(x+xOffs,y+yOffs,color);
       }
       w = w >> 1;
     }
@@ -277,8 +272,7 @@ int printChar6x8v(int xOffs, int yOffs, int color, unsigned char c) {
     w = pgm_read_byte(&(font6x8v[ctmp][x]));
     for (y = 0; y < 8; y++) {
       if (w & 1) {
-        //setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
-        setPixel(x + xOffs, 7 - y + yOffs, color);
+        setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
       }
       w = w >> 1;
     }
@@ -294,8 +288,7 @@ int printChar8x8(int xOffs, int yOffs, int color, unsigned char c) {
     w = pgm_read_byte(&(font8x8[c][y])); // Important: pgm_read_byte reads from the array in the flash memory
     for (x = 0; x < 8; x++) {
       if (w & 1) {
-        //setFrameBuffer(x+xOffs,y+yOffs,color);
-        setPixel(x + xOffs, y + yOffs, color);
+        setFrameBuffer(x+xOffs,y+yOffs,color);
       }
       w = w >> 1;
     }
@@ -311,13 +304,12 @@ int printChar8x12(int xOffs, int yOffs, int color, unsigned char c) {
     w = pgm_read_byte(&(font8x12[c][y])); // Important: pgm_read_byte reads from the array in the flash memory
     for (x = 0; x < 12; x++) {
       if (w & 1) {
-        //setFrameBuffer(x+xOffs,y+yOffs,color);
-        setPixel(x + xOffs, y + yOffs, color);
+        setFrameBuffer(x+xOffs,y+yOffs,color);
       }
       w = w >> 1;
     }
   }
-  return (xOffs + 7);
+  return (xOffs + 8);
 }
 
 int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
@@ -330,14 +322,12 @@ int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
     wH = pgm_read_byte(&(font9x16v[ctmp * FONT_WIDTH + FONT_WIDTH * 32 + x]));
     for (y = 0; y < 8; y++) {
       if (wH & 1) {
-        //setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
-        setPixel(x + xOffs, 7 - y + yOffs, color);
+        setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
       }
       wH = wH >> 1;
 
       if (wL & 1) {
-        //setFrameBuffer(x + xOffs, 15 - y + yOffs, color);
-        setPixel(x + xOffs, 15 - y + yOffs, color);
+        setFrameBuffer(x + xOffs, 15 - y + yOffs, color);
       }
       wL = wL >> 1;
     }

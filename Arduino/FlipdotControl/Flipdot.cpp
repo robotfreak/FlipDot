@@ -5,13 +5,13 @@
 #endif
 #include <SPI.h>
 
-#include "Flipdot.h"
+#include "FlipDot.h"
 
 FlipDot::FlipDot(int _sizeX, int _sizeY)
 {
   this->sizeX = _sizeX;
   this->sizeY = _sizeY;
-//  this->invert = invert; 
+  //  this->invert = invert;
 }
 
 void FlipDot::begin()
@@ -40,32 +40,35 @@ void FlipDot::begin()
 // I.e. MSB is swapped with LSB, etc.
 byte FlipDot::bitReverse( byte x )
 {
-   x = ((x >> 1) & 0x55) | ((x << 1) & 0xaa);
-   x = ((x >> 2) & 0x33) | ((x << 2) & 0xcc);
-   x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
-   return x;    
-} 
+  x = ((x >> 1) & 0x55) | ((x << 1) & 0xaa);
+  x = ((x >> 2) & 0x33) | ((x << 2) & 0xcc);
+  x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
+  return x;
+}
 
 void FlipDot::setPixel(int16_t x, int16_t y, uint16_t color)
 {
-//  int y2dot[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
-  int idx, dot;
-  if (y > 7) 
+  //  int y2dot[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+  if (y < FD_ROWS && x < FD_COLUMS && y >= 0 && x >= 0)
   {
-    idx = 1;
-    dot = (1 << (y-8));
-//    dot = y2dot[y-8];
+    int idx, dot;
+    if (y > 7)
+    {
+      idx = 1;
+      dot = (1 << (y - 8));
+      //    dot = y2dot[y-8];
+    }
+    else
+    {
+      idx = 0;
+      dot = (1 << y);
+      //    dot = y2dot[y];
+    }
+    if (color)
+      this->fdMtx[idx][x] |= dot;
+    else
+      this->fdMtx[idx][x] &= ~dot;
   }
-  else 
-  {
-    idx = 0;
-    dot = (1 << y);
-//    dot = y2dot[y];
-  }
-  if (color)
-    this->fdMtx[idx][x] |= dot;
-  else
-    this->fdMtx[idx][x] &= ~dot;
 }
 
 void FlipDot::ShiftOut(void)

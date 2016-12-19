@@ -152,7 +152,7 @@ void loop() {
       switch (cmd) {
         case 'C':  clearFrameBuffer(color); Serial.println("C"); updatePanel(); break;
         case 'G':  GameOfLife(); Serial.println("G"); break;
-        case 'T':  printTest(yVal); Serial.println("T"); updatePanel(); break;
+        case 'T':  printTest(yVal); Serial.println("T"); break;
         case 'S':  setPixel(xVal, yVal, color); break;
         case 'H':  hLine(yVal, color); updatePanel(); break;
         case 'V':  vLine(xVal, color); updatePanel(); break;
@@ -173,7 +173,6 @@ void printTest(int y) {
   clearFrameBuffer(OFF);
   i = printString(1, 0, ON, SMALL, "ABCDEFGHIJKLM");
   i = printString(1, 8, ON, SMALL, "NOPQRSTUVWXYZ");
-  printFrameBuffer();
   updatePanel();
   Serial.println("Small Font 6x8       ");
   delay(2000);
@@ -181,14 +180,12 @@ void printTest(int y) {
   clearFrameBuffer(OFF);
   i = printString(1, 0, ON, SMALL, "abcefghifklm");
   i = printString(1, 8, ON, SMALL, "noqrstuvwxyz");
-  printFrameBuffer();
   updatePanel();
   delay(2000);
 
   clearFrameBuffer(OFF);
   i = printString(1, 0, ON, MEDIUM, "ABCDEFGHIJKLM");
   i = printString(1, 8, ON, MEDIUM, "NOPQRSTUVWXYZ");
-  printFrameBuffer();
   updatePanel();
   Serial.println("Medium Font 8x8      ");
   delay(2000);
@@ -196,33 +193,28 @@ void printTest(int y) {
   clearFrameBuffer(OFF);
   i = printString(1, 0, ON, MEDIUM, "abcefghifklm");
   i = printString(1, 8, ON, MEDIUM, "noqrstuvwxyz");
-  printFrameBuffer();
   updatePanel();
   delay(2000);
 
   clearFrameBuffer(OFF);
   i = printString(2, 2, ON, LARGE, "ABCDEFGHIJKLM");
-  printFrameBuffer();
   Serial.println("Large Font 8x12      ");
   updatePanel();
   delay(2000);
 
   clearFrameBuffer(OFF);
   i = printString(2, 2, ON, LARGE, "abcefghifklm");
-  printFrameBuffer();
   updatePanel();
   delay(2000);
 
   clearFrameBuffer(OFF);
-  i = printString(2, 0, ON, XLARGE, "ABCDEFGHIJKLM");
-  printFrameBuffer();
+  i = printString(2, 0, ON, XLARGE, "ABCDEF");
   updatePanel();
   Serial.println("Extra Large Font 9x16 ");
   delay(2000);
 
   clearFrameBuffer(OFF);
-  i = printString(2, 0, ON, XLARGE, "12345678");
-  printFrameBuffer();
+  i = printString(2, 0, ON, XLARGE, "123456");
   updatePanel();
   delay(2000);
 
@@ -241,7 +233,6 @@ void printTest(int y) {
   //   vLine(77,ON);
   //   hLine(0,ON);
   //   hLine(15,ON);
-  printFrameBuffer();
   updatePanel();
   Serial.println("Bitmap Grafik");
   delay(2000);
