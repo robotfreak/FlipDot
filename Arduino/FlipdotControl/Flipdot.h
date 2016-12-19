@@ -20,10 +20,11 @@ const byte COL = 4;
 #define YELLOW 1
 #define BLACK 0
 
-#define SMALL 0
-#define MEDIUM 1
-#define LARGE 2
-#define XLARGE 3
+#define XSMALL 0
+#define SMALL 1
+#define MEDIUM 2
+#define LARGE 3
+#define XLARGE 4
 
 #define FLIPDOT_BLACK          0
 #define FLIPDOT_YELLOW         1  

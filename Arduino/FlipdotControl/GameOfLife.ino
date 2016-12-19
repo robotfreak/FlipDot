@@ -2,7 +2,7 @@
 #include "Flipdot.h"
 
 #define NUMROWS 16
-#define NUMCOLS 50
+#define NUMCOLS 25
 
 //uint8_t gameBoard[NUMROWS][NUMCOLS];
 uint8_t newGameBoard[NUMROWS][NUMCOLS];

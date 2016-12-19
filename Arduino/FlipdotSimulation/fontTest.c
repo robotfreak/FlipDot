@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include "font3x5.h"
 #include "font5x8v.h"
 #include "font6x8.h"
 #include "font6x8v.h"
@@ -107,6 +108,23 @@ int printChar5x8v(int xOffs, int yOffs, int color, unsigned char c)
         }
     }
     return (xOffs + 6);
+}
+
+int printChar3x5(int xOffs, int yOffs, int color, unsigned char c)
+{
+    unsigned char x, y, w, ctmp;
+    ctmp = c - 32;
+    for (y = 0; y < 6; y++)
+    {
+        w = font3x5[ctmp][y];
+        for (x = 0; x < 8; x++)
+        {
+            if (w & 1)
+                setFrameBuffer(6- x + xOffs, y + yOffs, color);
+            w = w >> 1;
+        }
+    }
+    return (xOffs + 4);
 }
 
 int printChar6x8v(int xOffs, int yOffs, int color, unsigned char c)
@@ -223,7 +241,7 @@ int printString(int xOffs, int yOffs, int color, int size, const char *s)
         switch (size)
         {
         case XSMALL:
-            x = printChar5x8v(x, y, color, s[i]);
+            x = printChar3x5(x, y, color, s[i]);
             break;
         case SMALL:
             x = printChar6x8v(x, y, color, s[i]);
@@ -425,7 +443,7 @@ int main(int argc, char *argv[])
 
         clearFrameBuffer(OFF);
         i = printString(1, 0, ON, XSMALL, "ABCDEFGHIJKLM");
-        i = printString(1, 5, ON, XSMALL, "noqrstuvwxyz");
+        i = printString(1, 6, ON, XSMALL, "nopqrstuvwxyz");
         i = printString(1, 11, ON, XSMALL, "1234567890!=()");
         printFrameBuffer();
         printf("Extra Small Font 5x6 ");
@@ -440,7 +458,7 @@ int main(int argc, char *argv[])
 
         clearFrameBuffer(OFF);
         i = printString(1, 0, ON, SMALL, "abcefghifklm");
-        i = printString(1, 8, ON, SMALL, "noqrstuvwxyz");
+        i = printString(1, 8, ON, SMALL, "nopqrstuvwxyz");
         printFrameBuffer();
         sleep(2);
 
@@ -453,7 +471,7 @@ int main(int argc, char *argv[])
 
         clearFrameBuffer(OFF);
         i = printString(1, 0, ON, MEDIUM, "abcefghifklm");
-        i = printString(1, 8, ON, MEDIUM, "noqrstuvwxyz");
+        i = printString(1, 8, ON, MEDIUM, "nopqrstuvwxyz");
         printFrameBuffer();
         sleep(2);
 

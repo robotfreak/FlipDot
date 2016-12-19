@@ -4,6 +4,7 @@
 //  CC-BY SA NC 2016 c-hack.de    ralf@surasto.de
 /////////////////////////////////////////////////////////////////
 
+#include "font3x5.h"
 #include "font6x8.h"
 #include "font8x8.h"
 #include "font8x12.h"
@@ -103,7 +104,7 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, String s)
           while (xs > 0)
           {
             stmp[0] = s.charAt(i);
-            stmp[1] = s.charAt(i+1);
+            stmp[1] = s.charAt(i + 1);
             stmp[2] = 0;
             w = hex2int(stmp);
             //printf("w=%0x x=%d y=%d\n", w, xo, y+yo);
@@ -177,6 +178,7 @@ int printString(int xOffs, int yOffs, int color, int size, String s) {
 
   while ((i < s.length()) && (i < 100)) {
     switch (size) {
+      case XSMALL: x = printChar3x5(x, y, color, s.charAt(i)); break;
       case SMALL: x = printChar6x8(x, y, color, s.charAt(i)); break;
       case MEDIUM: x = printChar8x8(x, y, color, s.charAt(i)); break;
       case LARGE: x = printChar8x12(x, y, color, s.charAt(i)); break;
@@ -248,7 +250,24 @@ int getFrameBuffer(int x, int y) {
 // color = ON means yellow, OFF means black
 // c = ASCII Character
 // returns new x position
+
 //============================================
+int printChar3x5(int xOffs, int yOffs, int color, unsigned char c)
+{
+  unsigned char x, y, w, ctmp;
+  ctmp = c - 32;
+  for (y = 0; y < 6; y++)
+  {
+    w = pgm_read_byte(&(font3x5[ctmp][y]));
+    for (x = 0; x < 8; x++)
+    {
+      if (w & 1)
+        setFrameBuffer(6 - x + xOffs, y + yOffs, color);
+      w = w >> 1;
+    }
+  }
+  return (xOffs + 4);
+}
 
 int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
   unsigned char x, y, w;
@@ -257,7 +276,7 @@ int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
     w = pgm_read_byte(&(font6x8[c][y]));  // Important: pgm_read_byte reads from the array in the flash memory
     for (x = 0; x < 8; x++) {
       if (w & 1) {
-        setFrameBuffer(x+xOffs,y+yOffs,color);
+        setFrameBuffer(x + xOffs, y + yOffs, color);
       }
       w = w >> 1;
     }
@@ -288,7 +307,7 @@ int printChar8x8(int xOffs, int yOffs, int color, unsigned char c) {
     w = pgm_read_byte(&(font8x8[c][y])); // Important: pgm_read_byte reads from the array in the flash memory
     for (x = 0; x < 8; x++) {
       if (w & 1) {
-        setFrameBuffer(x+xOffs,y+yOffs,color);
+        setFrameBuffer(x + xOffs, y + yOffs, color);
       }
       w = w >> 1;
     }
@@ -304,7 +323,7 @@ int printChar8x12(int xOffs, int yOffs, int color, unsigned char c) {
     w = pgm_read_byte(&(font8x12[c][y])); // Important: pgm_read_byte reads from the array in the flash memory
     for (x = 0; x < 12; x++) {
       if (w & 1) {
-        setFrameBuffer(x+xOffs,y+yOffs,color);
+        setFrameBuffer(x + xOffs, y + yOffs, color);
       }
       w = w >> 1;
     }

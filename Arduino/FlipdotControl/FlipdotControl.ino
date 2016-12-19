@@ -171,6 +171,14 @@ void loop() {
 void printTest(int y) {
 
   clearFrameBuffer(OFF);
+  i = printString(1, 0, ON, XSMALL, "ABCDEFGHIJKLM");
+  i = printString(1, 6, ON, XSMALL, "NOPQRSTUVWXYZ");
+  i = printString(1,11, ON, XSMALL, "1234567890()[]");
+  updatePanel();
+  Serial.println("Extra Small Font 3x5  ");
+  delay(2000);
+
+  clearFrameBuffer(OFF);
   i = printString(1, 0, ON, SMALL, "ABCDEFGHIJKLM");
   i = printString(1, 8, ON, SMALL, "NOPQRSTUVWXYZ");
   updatePanel();
