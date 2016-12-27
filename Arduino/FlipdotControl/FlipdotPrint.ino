@@ -114,6 +114,9 @@ int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, String s)
               if (w & 1) {
                 setFrameBuffer(xt - 1 - x + xo + xOffs, y + yo + yOffs, color);
               }
+              else {
+                setFrameBuffer(xt - 1 - x + xo + xOffs, y + yo + yOffs, !color);
+              }
               w = w >> 1;
             }
             xs -= xt;
@@ -259,6 +262,9 @@ int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
       if (w & 1) {
         setFrameBuffer(x+xOffs,y+yOffs,color);
       }
+      else {
+        setFrameBuffer(x+xOffs,y+yOffs,!color);
+      }
       w = w >> 1;
     }
   }
@@ -273,6 +279,9 @@ int printChar6x8v(int xOffs, int yOffs, int color, unsigned char c) {
     for (y = 0; y < 8; y++) {
       if (w & 1) {
         setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
+      }
+      else {
+        setFrameBuffer(x+xOffs,7-y+yOffs,!color);
       }
       w = w >> 1;
     }
@@ -290,6 +299,9 @@ int printChar8x8(int xOffs, int yOffs, int color, unsigned char c) {
       if (w & 1) {
         setFrameBuffer(x+xOffs,y+yOffs,color);
       }
+      else {
+        setFrameBuffer(x+xOffs,y+yOffs,!color);
+      }
       w = w >> 1;
     }
   }
@@ -305,6 +317,9 @@ int printChar8x12(int xOffs, int yOffs, int color, unsigned char c) {
     for (x = 0; x < 12; x++) {
       if (w & 1) {
         setFrameBuffer(x+xOffs,y+yOffs,color);
+      }
+      else {
+        setFrameBuffer(x+xOffs,y+yOffs,!color);
       }
       w = w >> 1;
     }
@@ -324,10 +339,16 @@ int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
       if (wH & 1) {
         setFrameBuffer(x + xOffs, 7 - y + yOffs, color);
       }
+      else {
+        setFrameBuffer(x+xOffs,7-y+yOffs,!color);
+      }
       wH = wH >> 1;
 
       if (wL & 1) {
         setFrameBuffer(x + xOffs, 15 - y + yOffs, color);
+      }
+      else {
+        setFrameBuffer(x+xOffs,15-y+yOffs,!color);
       }
       wL = wL >> 1;
     }

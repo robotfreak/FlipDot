@@ -13,7 +13,8 @@
 //
 //   Commands:
 //     C  Clear Screen
-//     P  Print
+//     B  Draw a Bitmap
+//     P  Print Text
 //     H  Draw a horizontal line
 //     V  Draw a vertical line
 //     S  Set a pixel
@@ -82,9 +83,10 @@ void loop() {
     if (c == '\\') {
 
       cmd = commandLine.charAt(0);
-      if (commandLine.charAt(2) == 'B') color = 1; else color = 0;
+      if (commandLine.charAt(2) == 'Y') color = 1; else color = 0;
       cmdPtr = 4;
       xStr = ""; yStr = "";
+      xVal = 0; yVal = 0;
       while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
         xStr +=  (char)commandLine.charAt(cmdPtr);
         cmdPtr++;
@@ -101,6 +103,8 @@ void loop() {
       if (cmd == 'B')  // Bitmap
       {
         xSizStr = ""; ySizStr = "";
+        xSiz = 0; ySiz = 0;
+        cmdPtr++;
         while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
           xSizStr +=  (char)commandLine.charAt(cmdPtr);
           cmdPtr++;
@@ -123,9 +127,10 @@ void loop() {
         else if (fontSize == 'M') fsize = MEDIUM;
         else if (fontSize == 'L') fsize = LARGE;
         else fsize = XLARGE;
+        cmdPtr++;
       }
 
-      cmdPtr += 2;
+      cmdPtr++;
       outputString = "";
       while ((cmdPtr < commandLine.length() - 1) && (outputString.length() < 100)) {
         outputString += (char)commandLine.charAt(cmdPtr);
@@ -136,16 +141,24 @@ void loop() {
 
       // ======= Debug only ===========
       Serial.println((char)cmd);
+      Serial.print("Color: ");
       Serial.println(color);
+      Serial.print("xVal: ");
       Serial.println(xVal);
+      Serial.print("yVal: ");
       Serial.println(yVal);
       if (cmd == 'B')
       {
+        Serial.print("xSiz: ");
         Serial.println(xSiz);
+        Serial.print("ySiz: ");
         Serial.println(ySiz);
       }
       else
+      {
+        Serial.print("font: ");
         Serial.println(fontSize);
+      }
       Serial.println(outputString);
 
       // ======= Execute the respective command ========
@@ -154,10 +167,10 @@ void loop() {
         case 'G':  GameOfLife(); Serial.println("G"); break;
         case 'T':  printTest(yVal); Serial.println("T"); break;
         case 'S':  setPixel(xVal, yVal, color); break;
-        case 'H':  hLine(yVal, color); updatePanel(); break;
-        case 'V':  vLine(xVal, color); updatePanel(); break;
-        case 'P':  printString(xVal, yVal, color, fsize, outputString); updatePanel(); break;
-        case 'B':  printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); updatePanel(); break;
+        case 'H':  hLine(yVal, color); updatePanel(); Serial.println("H"); break;
+        case 'V':  vLine(xVal, color); updatePanel(); Serial.println("V"); break;
+        case 'P':  printString(xVal, yVal, color, fsize, outputString); updatePanel(); Serial.println("P");  break;
+        case 'B':  printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); updatePanel(); Serial.println("B"); break;
         case 'U':  updatePanel(); Serial.println("U"); break;
       }
     }
