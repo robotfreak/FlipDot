@@ -4,7 +4,7 @@
 //  CC-BY SA NC 2016 c-hack.de    ralf@surasto.de
 /////////////////////////////////////////////////////////////////
 
-#include "font6x8.h"
+#include "font6x8v.h"
 #include "font8x8.h"
 #include "font8x12.h"
 #include "font9x16.h"
@@ -180,11 +180,11 @@ int printString(int xOffs, int yOffs, int color, int size, String s) {
 
   while ((i < s.length()) && (i < 100)) {
     switch (size) {
-      case SMALL: x = printChar6x8(x, y, color, s.charAt(i)); break;
+      case SMALL: x = printChar6x8v(x, y, color, s.charAt(i)); break;
       case MEDIUM: x = printChar8x8(x, y, color, s.charAt(i)); break;
       case LARGE: x = printChar8x12(x, y, color, s.charAt(i)); break;
       case XLARGE: x = printChar9x16v(x, y, color, s.charAt(i)); break;
-      default: x = printChar6x8(x, y, color, s[i]);
+      default: x = printChar6x8v(x, y, color, s[i]);
     }
     //Serial.print(s.charAt(i));
     i++;
@@ -252,7 +252,7 @@ int getFrameBuffer(int x, int y) {
 // c = ASCII Character
 // returns new x position
 //============================================
-
+#if 0
 int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
   unsigned char x, y, w;
 
@@ -262,19 +262,16 @@ int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
       if (w & 1) {
         setFrameBuffer(x+xOffs,y+yOffs,color);
       }
-      else {
-        setFrameBuffer(x+xOffs,y+yOffs,!color);
-      }
       w = w >> 1;
     }
   }
   return (xOffs + 6);
 }
-#if 0
+#endif
 int printChar6x8v(int xOffs, int yOffs, int color, unsigned char c) {
   unsigned int x, y, w, ctmp;
   ctmp = c - 32;
-  for (x = 0; x < 6; x++) {
+  for (x = 0; x < 8; x++) {
     w = pgm_read_byte(&(font6x8v[ctmp][x]));
     for (y = 0; y < 8; y++) {
       if (w & 1) {
@@ -288,7 +285,7 @@ int printChar6x8v(int xOffs, int yOffs, int color, unsigned char c) {
   }
   return (xOffs + 6);
 }
-#endif
+
 
 int printChar8x8(int xOffs, int yOffs, int color, unsigned char c) {
   unsigned int x, y, w;
@@ -330,6 +327,7 @@ int printChar8x12(int xOffs, int yOffs, int color, unsigned char c) {
 int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
   unsigned int x, y, wL, wH, ctmp;
   ctmp = c - 32;
+  if (ctmp >= 64) ctmp -= 32;
   if (ctmp >= 32) ctmp += 32;
   else if (ctmp >= 64) ctmp += 64;
   for (x = 0; x < 9; x++) {

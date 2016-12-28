@@ -191,8 +191,8 @@ void printTest(int y) {
   delay(2000);
 
   clearFrameBuffer(OFF);
-  i = printString(1, 0, ON, SMALL, "abcefghifklm");
-  i = printString(1, 8, ON, SMALL, "noqrstuvwxyz");
+  i = printString(1, 0, ON, SMALL, "abcdefghijklm");
+  i = printString(1, 8, ON, SMALL, "nopqrstuvwxyz");
   updatePanel();
   delay(2000);
 
@@ -204,8 +204,8 @@ void printTest(int y) {
   delay(2000);
 
   clearFrameBuffer(OFF);
-  i = printString(1, 0, ON, MEDIUM, "abcefghifklm");
-  i = printString(1, 8, ON, MEDIUM, "noqrstuvwxyz");
+  i = printString(1, 0, ON, MEDIUM, "abcdefghijklm");
+  i = printString(1, 8, ON, MEDIUM, "nopqrstuvwxyz");
   updatePanel();
   delay(2000);
 
@@ -216,7 +216,7 @@ void printTest(int y) {
   delay(2000);
 
   clearFrameBuffer(OFF);
-  i = printString(2, 2, ON, LARGE, "abcefghifklm");
+  i = printString(2, 2, ON, LARGE, "abcdefghijklm");
   updatePanel();
   delay(2000);
 
