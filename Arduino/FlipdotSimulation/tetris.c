@@ -9,6 +9,11 @@
 /////////////////////////////////////////////////////////////////
 #ifdef _WIN32
 #include <windows.h> 
+#else
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <linux/input.h>
 #endif
 
 #include <stdio.h>
@@ -306,271 +311,245 @@ void printFrameBuffer()
   }
 }
 
+
 // *******************************************************
-// *    Game of Life functions                           *
+// *    Tetris functions                                 *
 // *******************************************************
+#define PANELDATA_SIZE 50
 
-#define NUMROWS Y_PIXELS
-#define NUMCOLS X_SIZE
+#define LEFT_PIN 0
+#define RIGHT_PIN 1
+#define UP_PIN 2
+#define DOWN_PIN 3
 
-//bool gameBoard[NUMROWS][NUMCOLS];
-uint8_t newGameBoard[NUMCOLS][NUMROWS/8];
+uint16_t blocks[] = {
+//  ### 
+//   #  
+  0x0E40, 0x4C40, 0x4E00, 0x4640,
+// ####
+//     
+  0x0F00, 0x2222, 0x00F0, 0x4444,
+// ##  
+//  ## 
+  0x0C60, 0x4C80, 0xC600, 0x2640,
+// ### 
+// #   
+  0x4460, 0x0E80, 0xC440, 0x2E00,
+// ### 
+//   # 
+  0x44C0, 0x8E00, 0x6440, 0x0E20,
+//  ## 
+// ##  
+  0x06C0, 0x8C40, 0x6C00, 0x4620,
+// ##  
+// ##  
+  0x0CC0, 0x0CC0, 0x0CC0, 0x0CC0
+};
 
-//===========================================
-// setNewGameBoard(int x, int y, int value)
-// Set one Pixel at x,y-Position
-// value can be ON or OFF
-//===========================================
-void setNewGameBoard(int x, int y, int value)
+uint16_t randCnt;
+uint16_t gameTick = 0;
+
+uint8_t buttonValue = 0;
+uint8_t buttonStatus = 0;
+
+uint16_t panelData[PANELDATA_SIZE];
+
+uint8_t getKey(void)
 {
-  unsigned char w, wNot;
-  int yByteNo, yBitNo;
+uint8_t key = 0;
 
-  w = 1;
-  if ((y < NUMROWS) && (x < NUMCOLS) && (x >= 0) && (y >= 0))
-  {
-    yByteNo = y / 8; // integer division to select the byte
-    yBitNo = y % 8;  // module division (residual) to select the bit in that byte
-    w = w << yBitNo;
-    if (value == ON)
-    {
-      newGameBoard[x][yByteNo] = newGameBoard[x][yByteNo] | w; // Logical OR adds one bit to the existing byte
-    }
-    else
-    {
-      wNot = 0xFF - w;
-      newGameBoard[x][yByteNo] = newGameBoard[x][yByteNo] & wNot; // Logical AND set one bit to zero in the existing byte
-    }
-  }
+#ifdef _WIN32
+if(GetAsyncKeyState(VK_LEFT)&1 == 1)
+{
+  key |= (1<< LEFT_PIN);  
 }
-
-//===========================================
-// getNewFrameBuffer(int x, int y)
-// Get one Pixel at x,y-Position
-// returns value can be ON or OFF
-//===========================================
-int getNewGameBoard(int x, int y)
+else if(GetAsyncKeyState(VK_RIGHT)&1 == 1)
 {
-  unsigned char w, wNot;
-  int yByteNo, yBitNo;
-  int value = 0;
-
-  w = 1;
-  if ((y < NUMROWS) && (x < NUMCOLS) && (x >= 0) && (y >= 0))
-  {
-    yByteNo = y / 8; // integer division to select the byte
-    yBitNo = y % 8;  // module division (residual) to select the bit in that byte
-    w = w << yBitNo;
-    if (newGameBoard[x][yByteNo] & w) value = 1; else value = 0;
-  }
-  return value;
+  key |= (1<< RIGHT_PIN);  
 }
-
-//===========================================
-// randomInt(int min_num, int max_num)
-// calculates a random integer within the range
-// min_num, max_num
-//===========================================
-int randomInt(int min_num, int max_num)
+else if(GetAsyncKeyState(VK_UP)&1 == 1)
 {
-  int result = 0, low_num = 0, hi_num = 0;
-  if (min_num < max_num)
-  {
-    low_num = min_num;
-    hi_num = max_num + 1; // this is done to include max_num in output.
-  }
-  else
-  {
-    low_num = max_num + 1; // this is done to include max_num in output.
-    hi_num = min_num;
-  }
-  srand(time(NULL));
-  result = (rand() % (hi_num - low_num)) + low_num;
-  return result;
+  key |= (1<< UP_PIN);  
 }
-
-//===========================================
-// perturbInitialGameBoard()
-// Do some random modification on the start bitmap
-//===========================================
-void perturbInitialGameBoard()
+else if(GetAsyncKeyState(VK_DOWN)&1 == 1)
 {
-  int row, col, val;
-  int numChanges, i;
-
-  numChanges = randomInt(20, 100);
-  //printf("numChanges: %d\n", numChanges);
-  for (i = 0; i < numChanges; i++)
-  {
-    row = randomInt(0, NUMROWS);
-    col = randomInt(0, NUMCOLS);
-    val = getFrameBuffer(col, row);    
-    if (val)
-      setFrameBuffer(col,row, 0);
-    else
-      setFrameBuffer(col,row, 1);
-  }
+  key |= (1<< DOWN_PIN);  
 }
+#else
+    int yalv;
 
-//===========================================
-// initGameBoard()
-// Initialises the game board 
-// set the start position bitmap
-//===========================================
-int initGameBoard(int xOffs, int yOffs, int xSize, int ySize, const char *s)
-//void initGameBoard()
-{
-  clearFrameBuffer(OFF);
-  memset(newGameBoard, 0, sizeof(newGameBoard));
-  printBitmap(xOffs, yOffs, ON, xSize, ySize, s);
+    FILE *kbd = fopen("/dev/input/by-path/platform-i8042-serio-0-event-kbd", "r");
 
-   // perturbInitialGameBoard();
-}
+    char key_map[KEY_MAX/8 + 1];    //  Create a byte array the size of the number of keys
 
-//===========================================
-// isCellAlive(int row, int col)
-// Returns whether or not the specified cell is on.
-// If the cell specified is outside the game board, returns false.
-//===========================================
-bool isCellAlive(int row, int col)
-{
-  if (row < 0 || col < 0 || row >= NUMROWS || col >= NUMCOLS)
-  {
-    return false;
-  }
-  return (getFrameBuffer(col,row));   //gameBoard[row][col] == 1);
-}
+    memset(key_map, 0, sizeof(key_map));    //  Initate the array to zero's
+    ioctl(fileno(kbd), EVIOCGKEY(sizeof(key_map)), key_map);    //  Fill the keymap with the current keyboard state
+    for (yalv = 0; yalv < KEY_MAX; yalv++) {
+      int bindex = yalv / 8;
+      int b = yalv % 8;
 
-//===========================================
-// countNeighbors(int row, int col)
-// Counts the number of active cells surrounding the specified cell.
-// Cells outside the board are considered "off"
-// Returns a number in the range of 0 <= n < 9
-//===========================================
-int countNeighbors(int row, int col)
-{
-  int count = 0;
-  char rowDelta, colDelta;
-  for (rowDelta = -1; rowDelta <= 1; rowDelta++)
-  {
-    for (colDelta = -1; colDelta <= 1; colDelta++)
-    {
-      // skip the center cell
-      if (!(colDelta == 0 && rowDelta == 0))
-      {
-        if (isCellAlive(rowDelta + row, colDelta + col))
+      int result = key_map[bindex] & (1<<b);
+    if (result) {
+        /* the bit is set in the key state */
+        printf("  Key 0x%02x ", yalv);
+        switch ( yalv)
         {
-          count++;
+        case KEY_PAGEUP :
+            key |= (1<< UP_PIN);
+        break;
+        case KEY_PAGEDOWN :
+           key |= (1<< DOWN_PIN);
+        break;
+        case KEY_LEFT:
+           key |= (1<< LEFT_PIN);
+        break;
+        case KEY_RIGHT:
+           key |= (1<< RIGHT_PIN);
+        break;
+        default:
+            //printf(" (Unknown key)\n");
+        break;
         }
-      }
     }
-  }
-
-  return count;
+}
+#endif
+printf("\nkey: %x\n", key);
+return key;
 }
 
-//===========================================
-// calculateNewGameBoard()
-// Encodes the core rules of Conway's Game Of Life, 
-// and generates the next iteration of the board.
-// Rules taken from wikipedia.
-//===========================================
-void calculateNewGameBoard()
-{
-  int row, col, numNeighbors;
-  for (row = 0; row < NUMROWS; row++)
+void clear() {
+  uint16_t i;
+  for (i = 0; i < PANELDATA_SIZE; i++) {
+    panelData[i] = 0;
+  }
+}
+
+void setPixel(uint16_t x, uint8_t y, uint8_t value) {
+  if (value)
+    panelData[x] |= 1 << y;
+  else
+    panelData[x] &= ~(1 << y);
+}
+
+void setRow(uint8_t x, uint8_t y, uint8_t value) {
+  // TODO: Fixme
+  panelData[2*x+y] = value;
+}
+
+uint16_t getPixel(int x, int y) {
+  return panelData[x] & (1 << y);
+}
+
+void copyPixelData() {
+  uint16_t xV, yV;
+  uint16_t value; 
+
+  for(xV=0; xV<PANELDATA_SIZE; xV++)
   {
-    for (col = 0; col < NUMCOLS; col++)
+    for(yV=0; yV<Y_PIXELS; yV++)
     {
-      numNeighbors = countNeighbors(row, col);
-      if (getFrameBuffer(col,row) && numNeighbors < 2)
-      {
-        // Any live cell with fewer than two live neighbours dies, as if caused by under-population.
-        setNewGameBoard(col, row, OFF); // newGameBoard[col][row] = false;
-      }
-      else if (getFrameBuffer(col,row) && (numNeighbors == 2 || numNeighbors == 3))
-      {
-        // Any live cell with two or three live neighbours lives on to the next generation.
-         setNewGameBoard(col, row, ON); // newGameBoard[col][row] = true;
-      }
-      else if (getFrameBuffer(col,row) && numNeighbors > 3)
-      {
-        // Any live cell with more than three live neighbours dies, as if by overcrowding.
-         setNewGameBoard(col, row, OFF); // newGameBoard[col][row] = false;
-      }
-      else if (!getFrameBuffer(col,row) && numNeighbors == 3)
-      {
-        // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-         setNewGameBoard(col, row, ON); // newGameBoard[col][row] = true;
-      }
-      else
-      {
-        // All other cells will remain off
-         setNewGameBoard(col, row, OFF); // newGameBoard[col][row] = false;
-      }
+      value = (getPixel(xV,yV) != 0) ? ON : OFF;
+      setFrameBuffer(xV,yV,value);
     }
   }
+  printFrameBuffer();
 }
 
-//===========================================
-// swapGameBoards()
-// Copies the data from the new game board 
-// into the current game board array
-//===========================================
-void swapGameBoards()
-{
-  int row, col, val;
-  for (row = 0; row < NUMROWS; row++)
-  {
-    for (col = 0; col < NUMCOLS; col++)
-    {
-      val = getNewGameBoard(col, row);
-      setFrameBuffer(col, row, val);
-    }
-  }
-}
-
-//===========================================
-// showGameBoard()
-// calculates new board and update the framebuffer
-//===========================================
-void showGameBoard()
-{
-  //displayGameBoard();
-  calculateNewGameBoard();
-  swapGameBoards();
-}
-
-//############################# Main ###############################
-int main(int argc, char *argv[])
-{
-
-  int iterations = 0;
-
+void setup() {
   clearScreen();
   clearFrameBuffer(OFF);
-  printString(0, 1, ON, LARGE, "Game of");
-  printString(8, 9, ON, LARGE, "Life");
   printFrameBuffer();
-  sleep(3);
+}
 
-  //initGameBoard(24, 6, 4, 4, "03060200");  // r-pentomino
-  //initGameBoard(24, 6, 8, 8, "2008670000000000");   // acorn
-  //initGameBoard(24, 4, 4, 8, "0705050005050700");   // 
-  //initGameBoard(24, 2, 8, 4, "02C04700");   // die hard
-  //initGameBoard(20, 8, 8, 6, "020b0a0820a0");   // infinity
-  //initGameBoard(20, 8, 5, 5, "1D10030D15");   // infinity2
-  initGameBoard(5, 8, 40, 1, "7FBE381FDF");   // infinity3
-  //initGameBoard();
-  printFrameBuffer();
-  sleep(1);
-  iterations++;
+uint8_t xg = PANELDATA_SIZE+2;
+int8_t yg = 6;
 
-  while (iterations < 300)
-  {
-    showGameBoard();
-    printFrameBuffer();
-    printf("Iterations: %d     ", iterations++);
-    usleep(100000);
+void drawTile(uint8_t x, uint8_t y, uint16_t* tile, uint8_t value) {
+  if(value == 1) {
+    if(x < PANELDATA_SIZE+3) panelData[x-3] |= (*tile >> 12) << y; //<< y >> -y;
+    if(x < PANELDATA_SIZE+2) panelData[x-2] |= ((*tile & 0x0f00) >> 8) << y; // << y >> -y;
+    if(x < PANELDATA_SIZE+1) panelData[x-1] |= ((*tile & 0x00f0) >> 4) << y; // << y >> -y;
+    if(x < PANELDATA_SIZE+0) panelData[x] |= (*tile & 0x000f)  << y; // << y >> -y;
+  } else {
+    if(x < PANELDATA_SIZE+3) panelData[x-3] &= ~((*tile >> 12) << y); // << y >> -y);
+    if(x < PANELDATA_SIZE+2) panelData[x-2] &= ~(((*tile & 0x0f00) >> 8) << y); // << y >> -y);
+    if(x < PANELDATA_SIZE+1) panelData[x-1] &= ~(((*tile & 0x00f0) >> 4) << y); // << y >> -y);
+    if(x < PANELDATA_SIZE+0) panelData[x] &= ~((*tile & 0x000f) << y); // << y >> -y);
   }
+}
+
+int collideTile(uint8_t x, uint8_t y, uint16_t* tile) {
+  uint16_t coll = *tile >> 12;
+  uint16_t mask = coll;
+  if((coll && x == 3) || (x < PANELDATA_SIZE+4 && (panelData[x-4] << -y /*>> y*/) & 0x0f & coll)) return 1;
+  coll = ~mask & ((*tile & 0x0f00) >> 8);
+  mask |= coll;
+  if((coll && x == 2) || (x < PANELDATA_SIZE+3 && (panelData[x-3] << -y /*>> y*/) & 0x0f & coll)) return 2;
+  coll = ~mask & ((*tile & 0x00f0) >> 4);
+  mask |= coll;
+  if((coll && x == 1) || (x < PANELDATA_SIZE+2 && (panelData[x-2] << -y /* >> y*/) & 0x0f & coll)) return 4;
+  coll = ~mask & (*tile & 0x000f);
+  mask |= coll;
+  if((coll && x == 0) || (x < PANELDATA_SIZE+1 && (panelData[x-1] << -y /*>> y*/) & 0x0f & coll)) return 8;
+  return 0;
+}
+
+int block = 0;
+int speed = 32;
+int n = 0, logt=1;
+
+void loop() {
+  //if(gameTick > 64) {
+    //randCnt += buttonValue * 2 + 1;
+    
+    if(!collideTile(xg, yg, &blocks[block])) {
+      drawTile(xg,yg,&blocks[block],0);
+      xg--;
+    } else {
+      // TODO: erase full lines
+      //panelData[(n++)] |= collideTile(x, y, &blocks[block]) | (block << 10) | ((x>180) << 15);
+      xg = PANELDATA_SIZE+2;
+      yg = 6;
+      randCnt++;
+      block = randCnt % 28;
+      if(block > 28) block = 28;
+    }
+    buttonValue = getKey();
+    if(buttonValue & (1<<LEFT_PIN)) {
+      // TODO: collideY
+      printf("y: %d\n", yg);
+      yg++;
+    }
+    if(buttonValue & (1<<RIGHT_PIN)) {
+      // TODO: collideY
+      printf("y: %d\n", yg);
+      yg--;
+    }
+    if(buttonValue & (1<<UP_PIN)) {
+      // TODO: collideX & Y
+      block = (block / 4) * 4 + (block + 1) % 4;
+    }
+    if(buttonValue & (1<<DOWN_PIN)) {
+      while(!collideTile(xg, yg, &blocks[block])) {
+        xg--;
+      }
+    }
+    buttonValue &= ~((1<<LEFT_PIN) | (1<<RIGHT_PIN) | (1<<UP_PIN) | (1<<DOWN_PIN));
+    //randCnt /= 3;
+    drawTile(xg,yg,&blocks[block],1);
+    copyPixelData();
+    //gameTick-=64; // 16=normal
+  //}
+  gameTick++;
+  printf("%d\n",gameTick);
+  usleep(50000);
+}
+
+
+int main() {
+  setup();
+  //drawTile(40,6,&blocks[2],1);
+  //copyPixelData();
+
+  while(1) loop();
 }

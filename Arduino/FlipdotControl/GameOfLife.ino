@@ -5,8 +5,57 @@
 #define NUMCOLS 25
 
 //uint8_t gameBoard[NUMROWS][NUMCOLS];
-uint8_t newGameBoard[NUMROWS][NUMCOLS];
+uint8_t newGameBoard[NUMCOLS][NUMROWS/8];
 
+//===========================================
+// setNewGameBoard(int x, int y, int value)
+// Set one Pixel at x,y-Position
+// value can be ON or OFF
+//===========================================
+void setNewGameBoard(int x, int y, int value)
+{
+  unsigned char w, wNot;
+  int yByteNo, yBitNo;
+
+  w = 1;
+  if ((y < NUMROWS) && (x < NUMCOLS) && (x >= 0) && (y >= 0))
+  {
+    yByteNo = y / 8; // integer division to select the byte
+    yBitNo = y % 8;  // module division (residual) to select the bit in that byte
+    w = w << yBitNo;
+    if (value == ON)
+    {
+      newGameBoard[x][yByteNo] = newGameBoard[x][yByteNo] | w; // Logical OR adds one bit to the existing byte
+    }
+    else
+    {
+      wNot = 0xFF - w;
+      newGameBoard[x][yByteNo] = newGameBoard[x][yByteNo] & wNot; // Logical AND set one bit to zero in the existing byte
+    }
+  }
+}
+
+//===========================================
+// getNewFrameBuffer(int x, int y)
+// Get one Pixel at x,y-Position
+// returns value can be ON or OFF
+//===========================================
+int getNewGameBoard(int x, int y)
+{
+  unsigned char w, wNot;
+  int yByteNo, yBitNo;
+  int value = 0;
+
+  w = 1;
+  if ((y < NUMROWS) && (x < NUMCOLS) && (x >= 0) && (y >= 0))
+  {
+    yByteNo = y / 8; // integer division to select the byte
+    yBitNo = y % 8;  // module division (residual) to select the bit in that byte
+    w = w << yBitNo;
+    if (newGameBoard[x][yByteNo] & w) value = 1; else value = 0;
+  }
+  return value;
+}
 
 void perturbInitialGameBoard() {
   int row, col, val;
@@ -84,27 +133,30 @@ void calculateNewGameBoard() {
   for ( row = 0; row < NUMROWS; row++) {
     for ( col = 0; col < NUMCOLS; col++) {
       numNeighbors = countNeighbors(row, col);
-      if (getFrameBuffer(col,row) && numNeighbors < 2) {
+      if (getFrameBuffer(col,row) && numNeighbors < 2)
+      {
         // Any live cell with fewer than two live neighbours dies, as if caused by under-population.
-        newGameBoard[row][col] = false;
-        //setPixel(col, row, 0);
-      } else if (getFrameBuffer(col,row) && (numNeighbors == 2 || numNeighbors == 3)) {
+        setNewGameBoard(col, row, OFF); // newGameBoard[col][row] = false;
+      }
+      else if (getFrameBuffer(col,row) && (numNeighbors == 2 || numNeighbors == 3))
+      {
         // Any live cell with two or three live neighbours lives on to the next generation.
-        newGameBoard[row][col] = true;
-        //setPixel(col, row, 1);
-      } else if (getFrameBuffer(col,row) && numNeighbors > 3) {
+         setNewGameBoard(col, row, ON); // newGameBoard[col][row] = true;
+      }
+      else if (getFrameBuffer(col,row) && numNeighbors > 3)
+      {
         // Any live cell with more than three live neighbours dies, as if by overcrowding.
-        newGameBoard[row][col] = false;
-        //setPixel(col, row, 0);
-      } else if (!getFrameBuffer(col,row) && numNeighbors == 3) {
-        //} else if (gameBoard[row][col] && numNeighbors == 3) {
+         setNewGameBoard(col, row, OFF); // newGameBoard[col][row] = false;
+      }
+      else if (!getFrameBuffer(col,row) && numNeighbors == 3)
+      {
         // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-        newGameBoard[row][col] = true;
-        //setPixel(col, row, 1);
-      } else {
+         setNewGameBoard(col, row, ON); // newGameBoard[col][row] = true;
+      }
+      else
+      {
         // All other cells will remain off
-        newGameBoard[row][col] = false;
-        //setPixel(col, row, 0);
+         setNewGameBoard(col, row, OFF); // newGameBoard[col][row] = false;
       }
     }
   }
@@ -115,11 +167,11 @@ void calculateNewGameBoard() {
    Copies the data from the new game board into the current game board array
 */
 void swapGameBoards() {
-  uint8_t row, col;
+  uint8_t row, col, val;
   for ( row = 0; row < NUMROWS; row++) {
     for ( col = 0; col < NUMCOLS; col++) {
-      setFrameBuffer(col,row, newGameBoard[row][col]);
-      //gameBoard[row][col] = getFrameBuffer(col, row);
+      val = getNewGameBoard(col, row);
+      setFrameBuffer(col, row, val);
     }
   }
 }
