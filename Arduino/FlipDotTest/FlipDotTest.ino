@@ -1,34 +1,42 @@
 #include <Wire.h>
-#include "FlipDot.h"
+#include "Flipdot.h"
 
-#define LATCH 10
-#define OE 9
+FlipDot flipdot(FD_COLUMS, FD_ROWS);
 
-FlipDot fd(LATCH, OE);
+void setFlipdot(int color) {
+  int i, j;
+
+  for (i = 0; i < FD_COLUMS; i++) {
+    for (j = 0; j < FD_ROWS; j++) {
+      flipdot.setPixel(i, j, color);
+    }
+  }
+}
 
 void FlipDotOff(void)
 {
-  memset(fd.fdMtx, 0x00, sizeof(fd.fdMtx));
-  fd.Update();
+  setFlipdot(0); 
+  flipdot.update();
 }
 
 void FlipDotOn(void)
 {
-  memset(fd.fdMtx, 0xFF, sizeof(fd.fdMtx));
-  fd.Update();
+  setFlipdot(1); 
+  flipdot.update();
 }
 
 
 void setup() {
+  flipdot.begin();
   delay(3000);
 }
 
 void loop() {
 
   FlipDotOff();
-//  delay(1000);
+  delay(1000);
   FlipDotOn();
-//  delay(1000);
+  delay(1000);
 }
 
 
