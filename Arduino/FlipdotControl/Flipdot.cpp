@@ -73,11 +73,13 @@ void FlipDot::setPixel(int16_t x, int16_t y, uint16_t color)
 
 void FlipDot::ShiftOut(void)
 {
+  SPI.beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE0));
   digitalWrite (this->latchPin, LOW);
   SPI.transfer (~(this->fdCtrl));
   SPI.transfer (this->fdRow2);
   SPI.transfer (this->fdRow1);
   digitalWrite (this->latchPin, HIGH);
+  SPI.endTransaction();
 }
 
 
