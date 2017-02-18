@@ -7,7 +7,7 @@
 
 # Bedien Nachrichten FlipdotCtrl
 
-'''
+```
  Command format
    <Command>,<Color>,<x>,<y>,<size>,<....string....>\n
 
@@ -44,4 +44,4 @@
     "B,Y,10,1,8,8,AA55AA55AA55AA55\" prints a checkerboard bitmap at position x=10 (column), y=1 (row), size 8x8 pixel
     "H,Y,0,0\" prints a horizontal line at row 0
     "Y,Y,50,0\" prints a vertical line at clumn 50
-  '''  
+  ```  
