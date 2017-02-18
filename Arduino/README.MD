@@ -1,9 +1,9 @@
 # Programm Übersicht
 
-* FlipdotClockRTCTemp Anzeige von Uhrzeit, Temperatur und Öuftfeuchtigkeit
-* FlipdotTest Togglen aller Flipdots (an/aus)
-* FlipdotCtrl Fernbedienung über serielle Schnittstelle, Ausgabe von Text, Grafik mit Arduino Nano
-* FlipdotCtrlNodeMCU Fernbedienung über serielle Schnittstelle, Ausgabe von Text, Grafik mit NodeMCU (ESP8266)
+* FlipdotClockRTCTemp: Anzeige von Uhrzeit, Temperatur und Öuftfeuchtigkeit
+* FlipdotTest: Togglen aller Flipdots (an/aus)
+* FlipdotCtrl: Fernbedienung über serielle Schnittstelle, Ausgabe von Text, Grafik mit Arduino Nano
+* FlipdotCtrlNodeMCU: Fernbedienung über serielle Schnittstelle oder WiFi, Ausgabe von Text, Grafik mit NodeMCU (ESP8266)
 
 # Bedien Nachrichten FlipdotCtrl
 
@@ -36,8 +36,8 @@
      X EXTRALARGE
    xsiz,ysiz:
      Required only for Bitmap commands
-     xsiz number of pixel columns
-     ysiz number of pixel rows
+     xsiz number of bitmap columns
+     ysiz number of bitmap rows
      
    String:
      Contains the characters (for text) or pixels (for graphics) to be printed.
