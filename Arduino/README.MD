@@ -9,7 +9,7 @@
 
 ```
  Command format
-   <Command>,<Color>,<x>,<y>,<size>,<....string....>\n
+   <Command>,<Color>,<X>,<Y>,[<size>,<xsiz>,<ysiz>,]<....string....>\n
 
    Commands:
      C  Clear Screen
@@ -23,16 +23,24 @@
      B  Black
      Y  Yellow
    X,Y:
-     Required for all Print commands
+     Required for all Print or Bitmap commands
      Only Y is required for the horizontal line command "H"
      Only X is required for the vertical line command "V"
    size:
+     Required only for Print commands
      S SMALL
      M MEDIUM
      L LARGE
      X EXTRALARGE
+   xsiz,ysiz:
+     Required only for Bitmap commands
+     
    String:
-     Contains the characters to be printed
+     Contains the characters (for text) or pixels (for graphics) to be printed.
+     Bitmap Strings are interpreted as Hexadecimal values.
+     For Bitmaps <= 8 pixel wide use 1 Byte (2 ASCII chars) for each single row  
+     For Bitmaps > 8 .. <= 16 pixel wide use 2 Byte (4 ASCII chars) for each single row  
+     For Bitmaps > 16 .. <= 32 pixel wide use 4 Byte (8 ASCII chars) for each single row ...
    "\":
      The command lines is terminated by the return character
      It gets evaluated after reception of that character
