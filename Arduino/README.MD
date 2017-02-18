@@ -24,6 +24,8 @@
      Y  Yellow
    X,Y:
      Required for all Print or Bitmap commands
+     X (0..114) column
+     Y (0..15) row
      Only Y is required for the horizontal line command "H"
      Only X is required for the vertical line command "V"
    size:
@@ -34,6 +36,8 @@
      X EXTRALARGE
    xsiz,ysiz:
      Required only for Bitmap commands
+     xsiz number of pixel columns
+     ysiz number of pixel rows
      
    String:
      Contains the characters (for text) or pixels (for graphics) to be printed.
@@ -51,5 +55,6 @@
     "P,Y,0,1,M,Hallo Welt\" Prints String "Hallo Welt" at position x=0 (column), y=1 (row)
     "B,Y,10,1,8,8,AA55AA55AA55AA55\" prints a checkerboard bitmap at position x=10 (column), y=1 (row), size 8x8 pixel
     "H,Y,0,0\" prints a horizontal line at row 0
-    "Y,Y,50,0\" prints a vertical line at clumn 50
+    "Y,Y,50,0\" prints a vertical line at column 50
+    "T\" starts a test programm showing some text output of different font sizw and simple graphics
   ```  
