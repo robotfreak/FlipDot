@@ -119,7 +119,7 @@ void FlipDot::updatePanel(int panel)
     bitClear(this->fdCtrl, FD_STROBE_SIG);
     bitClear(this->fdCtrl, FD_COLUMN_SIG);
     ShiftOut();
-    delayMicroseconds(2100);
+    delay(2);
 
     //bitSet  (this->fdCtrl, FD_COLUMN_SIG);
     if ((this->fdMtx[0][col] != 0) || (this->fdMtx[1][col] != 0))
@@ -138,7 +138,7 @@ void FlipDot::updatePanel(int panel)
     this->fdRow1 = bitReverse(fdMtx[0][col]);
     this->fdRow2 = bitReverse(fdMtx[1][col]);
     ShiftOut();
-    delayMicroseconds(2000);
+    delay(2);
 
     this->fdRow1 = 0;
     this->fdRow2 = 0;
