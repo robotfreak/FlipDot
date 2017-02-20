@@ -33,7 +33,7 @@
 //     X EXTRALARGE
 //   String:
 //     Contains the characters to be printed
-//   "\":
+//   "\n":
 //     The command lines is terminated by the return character
 //     It gets evaluated after reception of that character
 //
@@ -49,10 +49,6 @@ const char* password = "7070944566680018"; // WLAN Passwort
 
 WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
-
-long lastMsg = 0;
-int value = 0;
-char msg[50];
 
 int i, j;
 int inByte;
@@ -142,7 +138,8 @@ void pollSerialCmd() {
   if (Serial.available() > 0) {
     c = Serial.read();
     if (commandLine.length() < 100) {
-      commandLine += c;
+      if (c != '\r')
+        commandLine += c;
     }
     else {
       commandLine = "";
@@ -150,7 +147,7 @@ void pollSerialCmd() {
     }
 
     // ==== If command string is complete... =======
-    if (c == '\\') {
+    if (c == '\n') {
       execCmd();
     }
   }
