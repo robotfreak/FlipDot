@@ -44,8 +44,8 @@
 
 //how many clients should be able to telnet to this ESP8266
 #define MAX_SRV_CLIENTS 1
-const char* ssid = "FRITZ!Box Fon WLAN 7390"; // WLAN-SSID
-const char* password = "7070944566680018"; // WLAN Passwort
+const char* ssid = "********"; // WLAN-SSID
+const char* password = "********"; // WLAN Passwort
 
 WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
