@@ -1,6 +1,6 @@
 # Flipdot Control
 
-FlipdotCtrl ist eine Programm um bis zu 5 AEG/Annax Flipdot Module mit insgesamt 115x16 Flippdots (3 Module mit 25x16, 2 Module mit 20x16 Pixel) über die serielle Schnittstelle anzusteuern. Text in verschiedenen Fontgrößen sowie einfache Grafiken können dargestellt werden. 
+FlipdotCtrl ist eine Programm, um 5 AEG/Annax Flipdot Module mit insgesamt 115x16 Flipdots (3 Module mit 25x16, 2 Module mit 20x16 Pixel) über die serielle Schnittstelle anzusteuern. Text in verschiedenen Fontgrößen sowie einfache Grafiken können dargestellt werden. 
 
 FlipdotCtrl basiert auf dem FlipdotHack von c-hack.de http://c-hack.de/projekte/flipdot-hack/
 
