@@ -7,6 +7,8 @@
 
 # Bedien Nachrichten FlipdotCtrl
 
+FlipdotCtrl basiert auf dem FlipdotHack von C-Hack http://c-hack.de/projekte/flipdot-hack/ 
+
 ```
  Command format
    <Command>,<Color>,<X>,<Y>,[<size>,<xsiz>,<ysiz>,]<....string....>\n
