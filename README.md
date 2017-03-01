@@ -5,6 +5,8 @@ FlipdotCtrl ist eine Programm um bis zu 5 AEG/Annax Flipdot Module mit insgesamt
 FlipdotCtrl basiert auf dem FlipdotHack von c-hack.de http://c-hack.de/projekte/flipdot-hack/
 
 
+![Flipdot](Images/CIMG5313.JPG)
+
 
 
 # Flipdot Uhr
