@@ -20,6 +20,7 @@ void FlipDot::begin()
   this->oePin = OE;
   this->resPin = RES;
   this->colPin = COL;
+  this->comPin = COMM;
 
   memset(fdMtx, 0x00, sizeof(fdMtx));
 
@@ -28,12 +29,14 @@ void FlipDot::begin()
   pinMode(this->oePin, OUTPUT);
   pinMode(this->resPin, OUTPUT);
   pinMode(this->colPin, OUTPUT);
+  pinMode(this->comPin, OUTPUT);
   digitalWrite (this->resPin, HIGH);
   delayMicroseconds(100);
   bitSet  (this->fdCtrl, FD_FRAME_SIG);
   ShiftOut();
   digitalWrite (this->oePin, LOW);
-  digitalWrite (this->colPin, HIGH);
+  digitalWrite (this->colPin, LOW);
+  digitalWrite(this->comPin, HIGH);
 }
 
 // Reverse the order of bits in a byte.
@@ -96,7 +99,8 @@ void FlipDot::updatePanel(int panel)
 
   f = panel;
   // shift out frames
-  bitClear(this->fdCtrl, FD_COLUMN_SIG);
+  digitalWrite (this->comPin, HIGH);
+//  bitClear(this->fdCtrl, FD_COLUMN_SIG);
   bitClear(this->fdCtrl, FD_STROBE_SIG);
   bitSet  (this->fdCtrl, FD_FRAME_SIG);
   ShiftOut();
@@ -117,15 +121,22 @@ void FlipDot::updatePanel(int panel)
 
     this->fdCtrl &= ~FD_PANEL_MASK;
     bitClear(this->fdCtrl, FD_STROBE_SIG);
-    bitClear(this->fdCtrl, FD_COLUMN_SIG);
+    digitalWrite (this->comPin, HIGH);
+ //   bitClear(this->fdCtrl, FD_COLUMN_SIG);
     ShiftOut();
     delayMicroseconds(2100);
 
     //bitSet  (this->fdCtrl, FD_COLUMN_SIG);
     if ((this->fdMtx[0][col] != 0) || (this->fdMtx[1][col] != 0))
-      bitSet  (this->fdCtrl, FD_COLUMN_SIG);
+    {
+     digitalWrite (this->comPin, LOW);
+//     bitSet  (this->fdCtrl, FD_COLUMN_SIG);
+    }
     else
-      bitClear(this->fdCtrl, FD_COLUMN_SIG);
+    {
+      digitalWrite (this->comPin, HIGH);
+//      bitClear(this->fdCtrl, FD_COLUMN_SIG)
+    }
     ShiftOut();
     delayMicroseconds(200);
 
@@ -145,7 +156,8 @@ void FlipDot::updatePanel(int panel)
     ShiftOut();
     delayMicroseconds(200);
 
-    bitClear(this->fdCtrl, FD_COLUMN_SIG);
+    digitalWrite (this->comPin, LOW);
+//    bitClear(this->fdCtrl, FD_COLUMN_SIG);
     ShiftOut();
     delayMicroseconds(100);
   }
@@ -156,6 +168,8 @@ void FlipDot::updatePanel(int panel)
 
 void FlipDot::update(void)
 {
+  digitalWrite (this->colPin, HIGH);
+  delay(2000);
   // initial state
   this->fdRow1 = 0x00;
   this->fdRow2 = 0x00;
@@ -165,5 +179,7 @@ void FlipDot::update(void)
   {
     updatePanel(f);
   }
+  delay(2000);
+  digitalWrite (this->colPin, LOW);
 }
 

@@ -53,6 +53,8 @@ void setup() {
   flipdot.begin();
   flipdot.update();
   delay(1000);
+  while(1)
+    flipTest();
 }
 
 void loop() {
@@ -258,3 +260,18 @@ void printTest(int y) {
   Serial.println("Bitmap Grafik");
   delay(2000);
 }
+
+//===================================
+// For debugging and testing only
+//===================================
+void flipTest(void) {
+
+  clearFrameBuffer(OFF);
+  updatePanel();
+  delay(1000);
+  
+  clearFrameBuffer(ON);
+  updatePanel();
+  delay(1000);
+}
+
