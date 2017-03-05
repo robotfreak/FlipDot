@@ -21,6 +21,9 @@ void FlipDot::begin()
   this->resPin = RES;
   this->colPin = COL;
   this->comPin = COMM;
+  this->redPin = LED_RED;
+  this->greenPin = LED_GREEN;
+  this->bluePin = LED_BLUE;
 
   memset(fdMtx, 0x00, sizeof(fdMtx));
 
@@ -182,4 +185,12 @@ void FlipDot::update(void)
   delay(2000);
   digitalWrite (this->colPin, LOW);
 }
+
+void FlipDot::setLedColor(uint16_t red, uint16_t green, uint16_t blue)
+{
+  analogWrite(this->redPin, red);
+  analogWrite(this->greenPin, green);
+  analogWrite(this->bluePin, blue);
+}
+
 

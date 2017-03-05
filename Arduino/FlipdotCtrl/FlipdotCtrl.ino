@@ -33,8 +33,8 @@
 //     X EXTRALARGE
 //   String:
 //     Contains the characters to be printed
-//   "\":
-//     The command lines is terminated by the return character
+//   "\n":
+//     The command lines is terminated by the new line character
 //     It gets evaluated after reception of that character
 //
 ////////////////////////////////////////////////////////////////////////////
@@ -47,14 +47,22 @@ String commandLine;
 
 FlipDot flipdot(FD_COLUMS, FD_ROWS);
 
+
 void setup() {
 
   Serial.begin(115200);
   flipdot.begin();
   flipdot.update();
   delay(1000);
+  flipdot.setLedColor(0xFF,0,0);
+  delay(1000);
+  flipdot.setLedColor(0,0,0xFF);
+  delay(1000);
+  
+  flipdot.setLedColor(0,0xFF,0);
+
   while(1)
-    flipTest();
+    printHello();
 }
 
 void loop() {
@@ -74,7 +82,8 @@ void loop() {
   if (Serial.available() > 0) {
     c = Serial.read();
     if (commandLine.length() < 100) {
-      commandLine += c;
+       if (c != '\r')
+        commandLine += c;
     }
     else {
       commandLine = "";
@@ -82,7 +91,7 @@ void loop() {
     }
 
     // ==== If command string is complete... =======
-    if (c == '\\') {
+    if (c == '\n') {
 
       cmd = commandLine.charAt(0);
       if (commandLine.charAt(2) == 'Y') color = 1; else color = 0;
@@ -179,6 +188,24 @@ void loop() {
   }
 }
 
+//===================================
+// For debugging and testing only
+//===================================
+void printHello() {
+
+  clearFrameBuffer(OFF);
+  i = printString(5, 0, ON, XLARGE, "IN-BERLIN");
+  updatePanel();
+  delay(30000);
+
+  clearFrameBuffer(OFF);
+  i = printString(5, 0, ON, XSMALL, "Di 19-22");
+  i = printString(5, 8, ON, XSMALL, "Fr 19-01");
+  i = printString(60, 0, ON, XLARGE, "ELAB");
+  updatePanel();
+  delay(30000);
+
+}
 
 //===================================
 // For debugging and testing only
