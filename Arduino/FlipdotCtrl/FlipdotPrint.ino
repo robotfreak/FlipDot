@@ -4,12 +4,12 @@
 //  CC-BY SA NC 2016 c-hack.de    ralf@surasto.de
 /////////////////////////////////////////////////////////////////
 
-#include "font3x5.h"
+//#include "font3x5.h"
 #include "font5x7.h"
-#include "font6x8v.h"
-#include "font8x8.h"
-#include "font8x12.h"
-#include "font9x16.h"
+//#include "font6x8v.h"
+//#include "font8x8.h"
+//#include "font8x12.h"
+#include "font9x16a.h"
 #include "Flipdot.h"
 
 //================== Constants ===============================
@@ -183,11 +183,11 @@ int printString(int xOffs, int yOffs, int color, int size, String s) {
   while ((i < s.length()) && (i < 100)) {
     switch (size) {
       case XSMALL: x = printChar5x7(x, y, color, s.charAt(i)); break;
-      case SMALL: x = printChar6x8v(x, y, color, s.charAt(i)); break;
-      case MEDIUM: x = printChar8x8(x, y, color, s.charAt(i)); break;
-      case LARGE: x = printChar8x12(x, y, color, s.charAt(i)); break;
-      case XLARGE: x = printChar9x16v(x, y, color, s.charAt(i)); break;
-      default: x = printChar6x8v(x, y, color, s[i]);
+      case SMALL: x = printChar5x7(x, y, color, s.charAt(i)); break;
+      case MEDIUM: x = printChar5x7(x, y, color, s.charAt(i)); break;
+      case LARGE: x = printChar9x16(x, y, color, s.charAt(i)); break;
+      case XLARGE: x = printChar9x16(x, y, color, s.charAt(i)); break;
+      default: x = printChar5x7(x, y, color, s[i]);
     }
     //Serial.print(s.charAt(i));
     i++;
@@ -256,6 +256,7 @@ int getFrameBuffer(int x, int y) {
 // returns new x position
 
 //============================================
+#if 0
 int printChar3x5(int xOffs, int yOffs, int color, unsigned char c)
 {
   unsigned char x, y, w, ctmp;
@@ -272,6 +273,7 @@ int printChar3x5(int xOffs, int yOffs, int color, unsigned char c)
   }
   return (xOffs + 4);
 }
+#endif
 
 int printChar5x7(int xOffs, int yOffs, int color, unsigned char c)
 {
@@ -307,7 +309,7 @@ int printChar6x8(int xOffs, int yOffs, int color, unsigned char c) {
   }
   return (xOffs + 6);
 }
-#endif
+
 
 int printChar6x8v(int xOffs, int yOffs, int color, unsigned char c) {
   unsigned int x, y, w, ctmp;
@@ -388,6 +390,37 @@ int printChar9x16v(int xOffs, int yOffs, int color, unsigned char c) {
       }
       else {
         setFrameBuffer(x+xOffs,15-y+yOffs,!color);
+      }
+      wL = wL >> 1;
+    }
+  }
+  return (xOffs + 11);
+}
+#endif
+
+int printChar9x16(int xOffs, int yOffs, int color, unsigned char c) {
+  unsigned int x, y, wL, wH, ctmp;
+  ctmp = c - 32;
+  if (ctmp >= 64) ctmp -= 32;
+  if (ctmp >= 32) ctmp += 32;
+  else if (ctmp >= 64) ctmp += 64;
+  for (x = 0; x < 9; x++) {
+    wL = pgm_read_byte(&(font9x16[ctmp * FONT_WIDTH + x]));
+    wH = pgm_read_byte(&(font9x16[ctmp * FONT_WIDTH + FONT_WIDTH * 32 + x]));
+    for (y = 0; y < 8; y++) {
+      if (wH & 1) {
+        setFrameBuffer(x + xOffs, 8 + y + yOffs, color);
+      }
+      else {
+        setFrameBuffer(x+xOffs, 8 + y+yOffs,!color);
+      }
+      wH = wH >> 1;
+
+      if (wL & 1) {
+        setFrameBuffer(x + xOffs, y + yOffs, color);
+      }
+      else {
+        setFrameBuffer(x+xOffs,y+yOffs,!color);
       }
       wL = wL >> 1;
     }
