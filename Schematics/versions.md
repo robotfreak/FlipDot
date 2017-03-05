@@ -17,9 +17,12 @@
 * R22 10k Pull Down an Schiebregister /RES Pin 
 * R23 10k Pull Up an Schiebregister /OE Pin  
 
-### V1.1 – 23.10.2016:
+### V1.3 – 05.03.2017:
 * Umstellung von Target v18 (PCB-Pool) auf Target v14 smart
-* erste PCB Versuche 
-* SPI in/out Steckverbinder für Kaskadierung
-* Stromversorgungs Steckverbinder für Kaskadierung
-* RS485 Treiber und Steckverbinder für Kaskadierung
+* COMM-IN Signal von Schieberegister auf Pin D5 geändert
+* SHRES Signal von Pin D6 auf Pin D2 geändert
+* RGB LED Strip Connector an Pin D3, D6, D7
+* COL Treiber Umstellung auf P-FET
+* COMM Treiber Umstellung auf N-FET
+
+
