@@ -10,8 +10,8 @@ endbit = 0x8F
 
 # Init Serial port
 ser = serial.Serial(
-	port= 'COM77', #'/dev/ttyUSB0',
-	baudrate=9600,
+	port= 'COM9', #'/dev/ttyUSB0',
+	baudrate=19200,
 	timeout=1,
 	parity=serial.PARITY_NONE,
 	stopbits=serial.STOPBITS_ONE,
