@@ -54,15 +54,15 @@ void setup() {
   flipdot.begin();
   flipdot.update();
   delay(1000);
-  flipdot.setLedColor(0xFF, 0, 0);
+  flipdot.setLedColor(0xFF,0,0);
   delay(1000);
-  flipdot.setLedColor(0, 0, 0xFF);
+  flipdot.setLedColor(0,0,0xFF);
   delay(1000);
+  
+  flipdot.setLedColor(0,0xFF,0);
 
-  flipdot.setLedColor(0, 0xFF, 0);
-  //
-  //  while(1)
-  //    printHello();
+  while(1)
+    printHello();
 }
 
 void loop() {
@@ -72,18 +72,17 @@ void loop() {
   int cmdPtr;
   int xVal, yVal;
   int xSiz, ySiz;
-  int r, g, b;
   char fontSize;
   int fsize;
 
-  String xStr, yStr, str;
+  String xStr, yStr;
   String xSizStr, ySizStr;
   String outputString;
 
   if (Serial.available() > 0) {
     c = Serial.read();
     if (commandLine.length() < 100) {
-      if (c != '\r')
+       if (c != '\r')
         commandLine += c;
     }
     else {
@@ -95,87 +94,61 @@ void loop() {
     if (c == '\n') {
 
       cmd = commandLine.charAt(0);
-      if (cmd == 'L')  // RGB LED
+      if (commandLine.charAt(2) == 'Y') color = 1; else color = 0;
+      cmdPtr = 4;
+      xStr = ""; yStr = "";
+      xVal = 0; yVal = 0;
+      while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
+        xStr +=  (char)commandLine.charAt(cmdPtr);
+        cmdPtr++;
+        xVal = xStr.toInt();
+      }
+
+      cmdPtr++;
+      while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
+        yStr += (char)commandLine.charAt(cmdPtr);
+        cmdPtr++;
+        yVal = yStr.toInt();
+      }
+
+      if (cmd == 'B')  // Bitmap
       {
-        cmdPtr = 2;
-        r = g = b = 0;
-        str = "";
-        while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          str +=  (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-        }
-        r = str.toInt();
-        str = "";
+        xSizStr = ""; ySizStr = "";
+        xSiz = 0; ySiz = 0;
         cmdPtr++;
         while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          str +=  (char)commandLine.charAt(cmdPtr);
+          xSizStr +=  (char)commandLine.charAt(cmdPtr);
           cmdPtr++;
+          xSiz = xSizStr.toInt();
         }
-        g = str.toInt();
-        str = "";
+
         cmdPtr++;
         while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          str +=  (char)commandLine.charAt(cmdPtr);
+          ySizStr += (char)commandLine.charAt(cmdPtr);
           cmdPtr++;
+          ySiz = ySizStr.toInt();
         }
-        b = str.toInt();
+
       }
-      else {
-        if (commandLine.charAt(2) == 'Y') color = 1; else color = 0;
-        cmdPtr = 4;
-        xStr = ""; yStr = "";
-        xVal = 0; yVal = 0;
-        while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          xStr +=  (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-          xVal = xStr.toInt();
-        }
-
+      else
+      {
         cmdPtr++;
-        while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          yStr += (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-          yVal = yStr.toInt();
-        }
-
-        if (cmd == 'B')  // Bitmap
-        {
-          xSizStr = ""; ySizStr = "";
-          xSiz = 0; ySiz = 0;
-          cmdPtr++;
-          while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-            xSizStr +=  (char)commandLine.charAt(cmdPtr);
-            cmdPtr++;
-            xSiz = xSizStr.toInt();
-          }
-
-          cmdPtr++;
-          while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-            ySizStr += (char)commandLine.charAt(cmdPtr);
-            cmdPtr++;
-            ySiz = ySizStr.toInt();
-          }
-
-        }
-        else
-        {
-          cmdPtr++;
-          fontSize = commandLine.charAt(cmdPtr);
-          if (fontSize == 'E') fsize = XSMALL;
-          else if (fontSize == 'S') fsize = SMALL;
-          else if (fontSize == 'M') fsize = MEDIUM;
-          else if (fontSize == 'L') fsize = LARGE;
-          else fsize = XLARGE;
-          cmdPtr++;
-        }
-
+        fontSize = commandLine.charAt(cmdPtr);
+        if (fontSize == 'E') fsize = XSMALL;
+        else if (fontSize == 'S') fsize = SMALL;
+        else if (fontSize == 'M') fsize = MEDIUM;
+        else if (fontSize == 'L') fsize = LARGE;
+        else fsize = XLARGE;
         cmdPtr++;
-        outputString = "";
-        while ((cmdPtr < commandLine.length() - 1) && (outputString.length() < 100)) {
-          outputString += (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-        }
       }
+
+      cmdPtr++;
+      outputString = "";
+      while ((cmdPtr < commandLine.length() - 1) && (outputString.length() < 100)) {
+        outputString += (char)commandLine.charAt(cmdPtr);
+        cmdPtr++;
+      }
+
       commandLine = "";    // Reset command mode
 
       // ======= Debug only ===========
@@ -193,15 +166,6 @@ void loop() {
         Serial.print("ySiz: ");
         Serial.println(ySiz);
       }
-      else if (cmd == 'L')
-      {
-        Serial.print("Red: ");
-        Serial.println(r);
-        Serial.print("Green: ");
-        Serial.println(g);
-        Serial.print("Blue: ");
-        Serial.println(b);
-      }
       else
       {
         Serial.print("font: ");
@@ -212,7 +176,6 @@ void loop() {
       // ======= Execute the respective command ========
       switch (cmd) {
         case 'C':  clearFrameBuffer(color); Serial.println("C"); updatePanel(); break;
-        case 'L':  flipdot.setLedColor(r, g, b); Serial.println("L"); break;
         case 'T':  printTest(yVal); Serial.println("T"); break;
         case 'S':  setPixel(xVal, yVal, color); break;
         case 'H':  hLine(yVal, color); updatePanel(); Serial.println("H"); break;
@@ -252,7 +215,7 @@ void printTest(int y) {
   clearFrameBuffer(OFF);
   i = printString(1, 0, ON, XSMALL, "ABCDEFGHIJKLM");
   i = printString(1, 6, ON, XSMALL, "NOPQRSTUVWXYZ");
-  i = printString(1, 11, ON, XSMALL, "1234567890()[]");
+  i = printString(1,11, ON, XSMALL, "1234567890()[]");
   updatePanel();
   Serial.println("Extra Small Font 3x5  ");
   delay(2000);
@@ -333,7 +296,7 @@ void flipTest(void) {
   clearFrameBuffer(OFF);
   updatePanel();
   delay(1000);
-
+  
   clearFrameBuffer(ON);
   updatePanel();
   delay(1000);
