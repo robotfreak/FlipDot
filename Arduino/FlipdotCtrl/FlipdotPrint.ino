@@ -36,7 +36,7 @@ unsigned char frameBuffer[X_SIZE][Y_SIZE];
 void clearFrameBuffer(int color) {
   int i, j;
 
-  Serial.println("C");
+  //Serial.println("C");
   for (i = 0; i < X_SIZE; i++) {
     for (j = 0; j < Y_PIXELS; j++) {
       setFrameBuffer(i, j, color);
@@ -46,7 +46,7 @@ void clearFrameBuffer(int color) {
 
 void updatePanel(void)
 {
-  printFrameBuffer();
+  //printFrameBuffer();
   flipdot.update();
 }
 //====================================================

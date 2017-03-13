@@ -14,7 +14,7 @@ const byte COMM = 5;
 const byte COL = 4;
 const byte LED_RED = 3;
 const byte LED_GREEN = 6;
-const byte LED_BLUE = 7;
+const byte LED_BLUE = 7;  // no PWM pin
 
 #define SET 1
 #define RESET 0

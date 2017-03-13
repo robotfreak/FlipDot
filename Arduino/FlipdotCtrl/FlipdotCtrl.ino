@@ -2,8 +2,8 @@
 ////////////////////////////////////////////////////////////////////////////
 // Flipdot_Firmware
 // CC-BY-SA-NC    8/2016 C-Hack (Ralf@Surasto.de)
-//  added support for 9x16 font   by robotfreak
-//  added support for graphics    by robotfreak
+//  added support for 9x16 font, bitmap graphics   by robotfreak
+//  added support for Annax/AEG flipdot panels     by robotfreak
 //
 // This main program runs on the Arduino and waits for commands via the RS232
 // For simplicity the commands are handed over as an ascii string so that
@@ -38,19 +38,26 @@
 //     The command lines is terminated by the new line character
 //     It gets evaluated after reception of that character
 //
+//   This sketch uses the following external libraries:
+//   TimeLib:    https://github.com/PaulStoffregen/Time
+//   RTClib.h:   https://github.com/PaulStoffregen/DS1307RTC
+//   MemoryFree: https://github.com/McNeight/MemoryFree
+//
 ////////////////////////////////////////////////////////////////////////////
 #include <Wire.h>
 #include <TimeLib.h>
 #include <RTClib.h>
+#include <MemoryFree.h>  // check memory usage 
 
 #include "Flipdot.h"
 
 int i, j;
 int inByte;
 String commandLine;
-unsigned long previousMillis = 0;        // will store last time from update
+//unsigned long previousMillis = 0;        // will store last time from update
 int fdState = 0;
 int fdMode = 0;
+int r, g, b;
 
 
 FlipDot flipdot(FD_COLUMS, FD_ROWS);
@@ -59,7 +66,8 @@ RTC_DS1307 rtc;
 DateTime tm;
 unsigned long current_time;
 unsigned long last_time;
-int hours, minutes; //, day, month, year;
+int hours, minutes, seconds;
+int days, months, years;
 
 //char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
@@ -67,6 +75,9 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println("FlipdotControl v1.0");
+  Serial.print("freeMemory()=");
+  Serial.println(freeMemory());
+
   flipdot.begin();
   flipdot.update();
   delay(1000);
@@ -86,8 +97,10 @@ void setup() {
   }
 
 
-
-  flipdot.setLedColor(0, 0xFF, 0);
+  r = 0;
+  g = 0xFF;
+  b = 0;
+  flipdot.setLedColor(r, g, b);
   //
   //  while(1)
   //    printHello();
@@ -95,25 +108,24 @@ void setup() {
   clearFrameBuffer(OFF);
   i = printString(5, 0, ON, XLARGE, "IN-BERLIN");
   flipdot.update();
+  Serial.print("freeMemory()=");
+  Serial.println(freeMemory());
 
 }
 
-void loop() {
+void pollCommand() {
   char c;
   int color;
   unsigned char cmd;
   int cmdPtr;
   int xVal, yVal;
   int xSiz, ySiz;
-  int r, g, b;
   char fontSize;
   int fsize;
 
   String xStr, yStr, str;
   String xSizStr, ySizStr;
   String outputString;
-
-
 
   if (Serial.available() > 0) {
     c = Serial.read();
@@ -128,6 +140,7 @@ void loop() {
 
     // ==== If command string is complete... =======
     if (c == '\n') {
+      //Serial.println(commandLine);
 
       cmd = commandLine.charAt(0);
       if (cmd == 'L')  // RGB LED
@@ -139,20 +152,21 @@ void loop() {
           str +=  (char)commandLine.charAt(cmdPtr);
           cmdPtr++;
         }
+        cmdPtr++;
         r = str.toInt();
         str = "";
-        cmdPtr++;
         while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
           str +=  (char)commandLine.charAt(cmdPtr);
           cmdPtr++;
         }
+        cmdPtr++;
         g = str.toInt();
         str = "";
-        cmdPtr++;
         while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
           str +=  (char)commandLine.charAt(cmdPtr);
           cmdPtr++;
         }
+        cmdPtr++;
         b = str.toInt();
       }
       else {
@@ -214,22 +228,9 @@ void loop() {
       commandLine = "";    // Reset command mode
 
       // ======= Debug only ===========
-      Serial.println((char)cmd);
-      Serial.print("Color: ");
-      Serial.println(color);
-      Serial.print("xVal: ");
-      Serial.println(xVal);
-      Serial.print("yVal: ");
-      Serial.println(yVal);
-      if (cmd == 'B')
+      if (cmd == 'L')
       {
-        Serial.print("xSiz: ");
-        Serial.println(xSiz);
-        Serial.print("ySiz: ");
-        Serial.println(ySiz);
-      }
-      else if (cmd == 'L')
-      {
+        Serial.println("ok");
         Serial.print("Red: ");
         Serial.println(r);
         Serial.print("Green: ");
@@ -239,17 +240,35 @@ void loop() {
       }
       else
       {
-        Serial.print("font: ");
-        Serial.println(fontSize);
+        Serial.println((char)cmd);
+        Serial.print("Color: ");
+        Serial.println(color);
+        Serial.print("xVal: ");
+        Serial.println(xVal);
+        Serial.print("yVal: ");
+        Serial.println(yVal);
+
+        if (cmd == 'B')
+        {
+          Serial.print("xSiz: ");
+          Serial.println(xSiz);
+          Serial.print("ySiz: ");
+          Serial.println(ySiz);
+        }
+        else
+        {
+          Serial.print("font: ");
+          Serial.println(fontSize);
+        }
+        Serial.println(outputString);
       }
-      Serial.println(outputString);
 
       fdMode = 0;
       fdState = 0;
       // ======= Execute the respective command ========
       switch (cmd) {
         case 'C':  clearFrameBuffer(color); Serial.println("C"); updatePanel(); break;
-        case 'L':  flipdot.setLedColor(r, g, b); Serial.println("L"); break;
+        case 'L':  flipdot.setLedColor(r, g, b); Serial.println("Led"); break;
         case 'S':  setPixel(xVal, yVal, color); break;
         case 'H':  hLine(yVal, color); updatePanel(); Serial.println("H"); break;
         case 'V':  vLine(xVal, color); updatePanel(); Serial.println("V"); break;
@@ -264,17 +283,28 @@ void loop() {
       }
     }
   }
+}
+
+void loop() {
+
+  showFreeMem();
+  showTime();
+  pollCommand();
 
   tm = rtc.now();
   hours = tm.hour();
   minutes = tm.minute();
-  if (hours > 5 && hours < 19)
+  seconds = tm.second();
+  //getTimeStr();
+
+  if ((hours < 18) || (hours > 20))
   {
     printNews();
   }
+
   if (hours < 3 || hours > 16)
   {
-    flipdot.setLedColor(0, 0xFF, 0);
+    flipdot.setLedColor(r, g, b);
 
   }
   else
@@ -300,6 +330,7 @@ void loop() {
     default:
       break;
   }
+
 }
 
 #if 0
@@ -347,9 +378,12 @@ String getTimeStr(void) {
   tm = rtc.now();
   hours = tm.hour();
   minutes = tm.minute();
+  seconds = tm.second();
   print2digits(hours);
   Serial.write(':');
   print2digits(minutes);
+  Serial.write(':');
+  print2digits(seconds);
   Serial.println("\n");
   if (hours < 10)
     str += "0";
@@ -389,6 +423,7 @@ void print2digits(int number) {
 // For debugging and testing only
 //===================================
 void printNews() {
+  static unsigned long previousMillis = 0;        // will store last time from update
 
   unsigned long currentMillis = millis();
   String str;
@@ -400,10 +435,12 @@ void printNews() {
     switch (fdState)
     {
       case 0:
+        Serial.println("In-Berlin");
         i = printString(5, 0, ON, XLARGE, "IN-BERLIN");
         fdState = 1;
         break;
       case 1:
+        Serial.println("eLab");
         i = printString(5, 0, ON, XSMALL, "Di 19-22");
         i = printString(5, 8, ON, XSMALL, "Fr 19-01");
         i = printString(60, 0, ON, XLARGE, "ELAB");
@@ -423,6 +460,7 @@ void printNews() {
 // For debugging and testing only
 //===================================
 void printTest() {
+  static unsigned long previousMillis = 0;        // will store last time from update
   unsigned long currentMillis = millis();
 
   if (currentMillis - previousMillis >= 10000) {
@@ -483,6 +521,7 @@ void printTest() {
 // For debugging and testing only
 //===================================
 void printDateTime(void) {
+  static unsigned long previousMillis = 0;        // will store last time from update
 
   unsigned long currentMillis = millis();
 
@@ -513,6 +552,7 @@ void printDateTime(void) {
 // For debugging and testing only
 //===================================
 void flipTest(void) {
+  static unsigned long previousMillis = 0;        // will store last time from update
 
   unsigned long currentMillis = millis();
 
@@ -535,6 +575,36 @@ void flipTest(void) {
 
     }
     updatePanel();
+  }
+}
+
+void showFreeMem(void) {
+  static unsigned long previousMillis = 0;        // will store last time from update
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= 30000) {
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+
+    Serial.print("freeMemory()=");
+    Serial.println(freeMemory());
+  }
+}
+
+void showTime(void) {
+  static unsigned long previousMillis = 0;        // will store last time from update
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= 30000) {
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+    tm = rtc.now();
+    hours = tm.hour();
+    minutes = tm.minute();
+    print2digits(hours);
+    Serial.write(':');
+    print2digits(minutes);
+    Serial.println("\n");
   }
 }
 
