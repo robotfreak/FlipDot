@@ -48,8 +48,16 @@
 #include <TimeLib.h>
 #include <RTClib.h>
 #include <MemoryFree.h>  // check memory usage 
+#include <SoftwareSerial.h>
 
 #include "Flipdot.h"
+#include "SparkFunSerLcd.h"
+
+const byte LED_RED = 3;
+const byte LED_GREEN = 6;
+const byte LED_BLUE = 7;  // no PWM pin
+
+const byte STOP_PIN = 2;
 
 int i, j;
 int inByte;
@@ -59,74 +67,95 @@ int fdState = 0;
 int fdMode = 0;
 int r, g, b;
 
-
 FlipDot flipdot(FD_COLUMS, FD_ROWS);
+
+SoftwareSerial mySerial(12, 8); // RX, TX
+SparkFunSerLCD lcd;       //instantiate an LCD object
 
 RTC_DS1307 rtc;
 DateTime tm;
 unsigned long current_time;
 unsigned long last_time;
 int hours, minutes, seconds;
+int startTimeOut, stopTimeOut;
 int days, months, years;
+boolean timeOut = false;
+int buttonState;             // the current reading from the input pin
+int lastButtonState = LOW;   // the previous reading from the input pin
+
+// the following variables are unsigned long's because the time, measured in miliseconds,
+// will quickly become a bigger number than can be stored in an int.
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
 
 //char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 void setup() {
 
+  mySerial.begin(9600);      //set serial port speed
+  lcd.serial = &mySerial;      //set pointer to serial port
+  delay(1000);
+  lcd.brightness(145);      //set backlight brightness
+  lcd.clear();        //clear the screen
+  lcd.position(0);      //line 0 character 0
+  lcd.serial->print("FlipdotControl");   //first line text
+  delay(3000);
+  lcd.clear();        //clear the screen
+
   Serial.begin(115200);
   Serial.println("FlipdotControl v1.0");
-  Serial.print("freeMemory()=");
-  Serial.println(freeMemory());
+
+  pinMode(STOP_PIN, INPUT_PULLUP);
 
   flipdot.begin();
-  flipdot.update();
+  updatePanel();
   delay(1000);
-  flipdot.setLedColor(0xFF, 0, 0);
+  setLedColor(0xFF, 0, 0);
   delay(1000);
-  flipdot.setLedColor(0, 0, 0xFF);
+  setLedColor(0, 0, 0xFF);
   delay(1000);
 
   if (! rtc.begin()) {
+      lcdShowState("wait rtc");
   }
-  else if (! rtc.isrunning()) {
-    // following line sets the RTC to the date & time this sketch was compiled
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    // This line sets the RTC with an explicit date & time, for example to set
-    // January 21, 2014 at 3am you would call:
-    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  else if (rtc.isok() == true) 
+  {
+    if (! rtc.isrunning()) {
+      // following line sets the RTC to the date & time this sketch was compiled
+      //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+      // This line sets the RTC with an explicit date & time, for example to set
+      // January 21, 2014 at 3am you would call:
+      // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+      lcdShowState("set rtc");
+    }
+    else
+      lcdShowState("rtc ok");
   }
-
+  else
+    lcdShowState("rtc fail");
 
   r = 0;
   g = 0xFF;
   b = 0;
-  flipdot.setLedColor(r, g, b);
-  //
-  //  while(1)
-  //    printHello();
+  setLedColor(r, g, b);
 
   clearFrameBuffer(OFF);
   i = printString(5, 0, ON, XLARGE, "IN-BERLIN");
-  flipdot.update();
-  Serial.print("freeMemory()=");
-  Serial.println(freeMemory());
-
+  updatePanel();
 }
 
-void pollCommand() {
+void lcdShowState(String str)
+{
+  lcd.position(4);
+  lcd.serial->print(str);
+  //while (str.length() < 12)
+  //  lcd.serial->write(' ');
+}
+
+boolean checkForCommand(void) {
   char c;
-  int color;
-  unsigned char cmd;
-  int cmdPtr;
-  int xVal, yVal;
-  int xSiz, ySiz;
-  char fontSize;
-  int fsize;
 
-  String xStr, yStr, str;
-  String xSizStr, ySizStr;
-  String outputString;
-
+  boolean ret = false;
   if (Serial.available() > 0) {
     c = Serial.read();
     if (commandLine.length() < 100) {
@@ -140,177 +169,213 @@ void pollCommand() {
 
     // ==== If command string is complete... =======
     if (c == '\n') {
-      //Serial.println(commandLine);
-
-      cmd = commandLine.charAt(0);
-      if (cmd == 'L')  // RGB LED
-      {
-        cmdPtr = 2;
-        r = g = b = 0;
-        str = "";
-        while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          str +=  (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-        }
-        cmdPtr++;
-        r = str.toInt();
-        str = "";
-        while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          str +=  (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-        }
-        cmdPtr++;
-        g = str.toInt();
-        str = "";
-        while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          str +=  (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-        }
-        cmdPtr++;
-        b = str.toInt();
-      }
-      else {
-        if (commandLine.charAt(2) == 'Y') color = 1; else color = 0;
-        cmdPtr = 4;
-        xStr = ""; yStr = "";
-        xVal = 0; yVal = 0;
-        while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          xStr +=  (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-          xVal = xStr.toInt();
-        }
-
-        cmdPtr++;
-        while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-          yStr += (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-          yVal = yStr.toInt();
-        }
-
-        if (cmd == 'B')  // Bitmap
-        {
-          xSizStr = ""; ySizStr = "";
-          xSiz = 0; ySiz = 0;
-          cmdPtr++;
-          while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-            xSizStr +=  (char)commandLine.charAt(cmdPtr);
-            cmdPtr++;
-            xSiz = xSizStr.toInt();
-          }
-
-          cmdPtr++;
-          while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
-            ySizStr += (char)commandLine.charAt(cmdPtr);
-            cmdPtr++;
-            ySiz = ySizStr.toInt();
-          }
-
-        }
-        else
-        {
-          cmdPtr++;
-          fontSize = commandLine.charAt(cmdPtr);
-          if (fontSize == 'E') fsize = XSMALL;
-          else if (fontSize == 'S') fsize = SMALL;
-          else if (fontSize == 'M') fsize = MEDIUM;
-          else if (fontSize == 'L') fsize = LARGE;
-          else fsize = XLARGE;
-          cmdPtr++;
-        }
-
-        cmdPtr++;
-        outputString = "";
-        while ((cmdPtr < commandLine.length() - 1) && (outputString.length() < 100)) {
-          outputString += (char)commandLine.charAt(cmdPtr);
-          cmdPtr++;
-        }
-      }
-      commandLine = "";    // Reset command mode
-
-      // ======= Debug only ===========
-      if (cmd == 'L')
-      {
-        Serial.println("ok");
-        Serial.print("Red: ");
-        Serial.println(r);
-        Serial.print("Green: ");
-        Serial.println(g);
-        Serial.print("Blue: ");
-        Serial.println(b);
-      }
-      else
-      {
-        Serial.println((char)cmd);
-        Serial.print("Color: ");
-        Serial.println(color);
-        Serial.print("xVal: ");
-        Serial.println(xVal);
-        Serial.print("yVal: ");
-        Serial.println(yVal);
-
-        if (cmd == 'B')
-        {
-          Serial.print("xSiz: ");
-          Serial.println(xSiz);
-          Serial.print("ySiz: ");
-          Serial.println(ySiz);
-        }
-        else
-        {
-          Serial.print("font: ");
-          Serial.println(fontSize);
-        }
-        Serial.println(outputString);
-      }
-
-      fdMode = 0;
-      fdState = 0;
-      // ======= Execute the respective command ========
-      switch (cmd) {
-        case 'C':  clearFrameBuffer(color); Serial.println("C"); updatePanel(); break;
-        case 'L':  flipdot.setLedColor(r, g, b); Serial.println("Led"); break;
-        case 'S':  setPixel(xVal, yVal, color); break;
-        case 'H':  hLine(yVal, color); updatePanel(); Serial.println("H"); break;
-        case 'V':  vLine(xVal, color); updatePanel(); Serial.println("V"); break;
-        case 'P':  printString(xVal, yVal, color, fsize, outputString); updatePanel(); Serial.println("P");  break;
-        case 'B':  printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); updatePanel(); Serial.println("B"); break;
-        case 'U':  updatePanel(); Serial.println("U"); break;
-        case 'f':  fdMode = 1; break;
-        case 'n':  fdMode = 2; break;
-        case 't':  fdMode = 3; break;
-        case 'd':  fdMode = 4; break;
-          // case 'h':  showHelp(); break;
-      }
+      ret = true;
     }
+  }
+  return ret;
+}
+
+void execCommand() {
+
+  int color;
+  unsigned char cmd;
+  int cmdPtr;
+  int xVal, yVal;
+  int xSiz, ySiz;
+  char fontSize;
+  int fsize;
+
+  String str;
+  String outputString;
+
+  //Serial.println(commandLine);
+
+  cmd = commandLine.charAt(0);
+  if (cmd == 'L')  // RGB LED
+  {
+    cmdPtr = 2;
+    r = g = b = 0;
+    str = "";
+    while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
+      str +=  (char)commandLine.charAt(cmdPtr);
+      cmdPtr++;
+    }
+    cmdPtr++;
+    r = str.toInt();
+    str = "";
+    while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
+      str +=  (char)commandLine.charAt(cmdPtr);
+      cmdPtr++;
+    }
+    cmdPtr++;
+    g = str.toInt();
+    str = "";
+    while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
+      str +=  (char)commandLine.charAt(cmdPtr);
+      cmdPtr++;
+    }
+    cmdPtr++;
+    b = str.toInt();
+  }
+  else {
+    if (commandLine.charAt(2) == 'Y') color = 1; else color = 0;
+    cmdPtr = 4;
+    str = "";
+    xVal = 0; yVal = 0;
+    while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
+      str +=  (char)commandLine.charAt(cmdPtr);
+      cmdPtr++;
+    }
+    xVal = str.toInt();
+
+    str = "";
+    cmdPtr++;
+    while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
+      str += (char)commandLine.charAt(cmdPtr);
+      cmdPtr++;
+    }
+    yVal = str.toInt();
+
+    if (cmd == 'B')  // Bitmap
+    {
+      str = "";
+      xSiz = 0; ySiz = 0;
+      cmdPtr++;
+      while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
+        str +=  (char)commandLine.charAt(cmdPtr);
+        cmdPtr++;
+      }
+      xSiz = str.toInt();
+
+      str = "";
+      cmdPtr++;
+      while ((cmdPtr < commandLine.length()) && (commandLine.charAt(cmdPtr) != ',')) {
+        str += (char)commandLine.charAt(cmdPtr);
+        cmdPtr++;
+      }
+      ySiz = str.toInt();
+
+    }
+    else
+    {
+      cmdPtr++;
+      fontSize = commandLine.charAt(cmdPtr);
+      if (fontSize == 'E') fsize = XSMALL;
+      else if (fontSize == 'S') fsize = SMALL;
+      else if (fontSize == 'M') fsize = MEDIUM;
+      else if (fontSize == 'L') fsize = LARGE;
+      else fsize = XLARGE;
+      cmdPtr++;
+    }
+
+    cmdPtr++;
+    outputString = "";
+    while ((cmdPtr < commandLine.length() - 1) && (outputString.length() < 100)) {
+      outputString += (char)commandLine.charAt(cmdPtr);
+      cmdPtr++;
+    }
+  }
+  commandLine = "";    // Reset command mode
+
+  // ======= Debug only ===========
+  if (cmd == 'L')
+  {
+    Serial.println("ok");
+    Serial.print("Red: ");
+    Serial.println(r);
+    Serial.print("Green: ");
+    Serial.println(g);
+    Serial.print("Blue: ");
+    Serial.println(b);
+  }
+  else
+  {
+    Serial.println((char)cmd);
+    Serial.print("Color: ");
+    Serial.println(color);
+    Serial.print("xVal: ");
+    Serial.println(xVal);
+    Serial.print("yVal: ");
+    Serial.println(yVal);
+
+    if (cmd == 'B')
+    {
+      Serial.print("xSiz: ");
+      Serial.println(xSiz);
+      Serial.print("ySiz: ");
+      Serial.println(ySiz);
+    }
+    else
+    {
+      Serial.print("font: ");
+      Serial.println(fontSize);
+    }
+    Serial.println(outputString);
+  }
+
+  fdMode = 0;
+  fdState = 0;
+  // ======= Execute the respective command ========
+  switch (cmd) {
+    case 'C':  clearFrameBuffer(color); Serial.println("C"); updatePanel(); break;
+    case 'L':  setLedColor(r, g, b); Serial.println("Led"); break;
+    case 'S':  setPixel(xVal, yVal, color); break;
+    case 'H':  hLine(yVal, color); updatePanel(); Serial.println("H"); break;
+    case 'V':  vLine(xVal, color); updatePanel(); Serial.println("V"); break;
+    case 'P':  printString(xVal, yVal, color, fsize, outputString); updatePanel(); Serial.println("P");  break;
+    case 'B':  printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); updatePanel(); Serial.println("B"); break;
+    case 'U':  updatePanel(); Serial.println("U"); break;
+    case 'f':  fdMode = 1; break;
+    case 'n':  fdMode = 2; break;
+    case 't':  fdMode = 3; break;
+    case 'd':  fdMode = 4; break;
+      // case 'h':  showHelp(); break;
   }
 }
 
 void loop() {
-
-  showFreeMem();
+  boolean btn;
+  getTime();
   showTime();
-  pollCommand();
+  showFreeMem();
 
-  tm = rtc.now();
-  hours = tm.hour();
-  minutes = tm.minute();
-  seconds = tm.second();
+  if (true == checkForCommand())
+    execCommand();
+
   //getTimeStr();
 
-  if ((hours < 18) || (hours > 20))
+  btn = checkButton(STOP_PIN);
+  if (btn == true)
   {
-    printNews();
+    startTimeOut = hours;
+    stopTimeOut = hours + 2;
+    timeOut = true;
+    Serial.println("Stop Button pressed!");
+  }
+
+  if (timeOut == false)
+  {
+    if ((hours < 18) || (hours > 22))
+    {
+      printNews();
+    }
+    else
+      lcdShowState("offline  ");
+  }
+  else
+  {
+    lcdShowState("timeout  ");
+    if (hours > stopTimeOut)
+      timeOut = false;
   }
 
   if (hours < 3 || hours > 16)
   {
-    flipdot.setLedColor(r, g, b);
-
+    setLedColor(r, g, b);
   }
   else
   {
-    flipdot.setLedColor(0, 0, 0);
-
+    setLedColor(0, 0, 0);
   }
 
 
@@ -331,6 +396,66 @@ void loop() {
       break;
   }
 
+}
+
+boolean checkButton(int buttonPin)
+{
+  boolean ret = false;
+  // read the state of the switch into a local variable:
+  int reading = digitalRead(buttonPin);
+
+  // check to see if you just pressed the button
+  // (i.e. the input went from LOW to HIGH),  and you've waited
+  // long enough since the last press to ignore any noise:
+
+  // If the switch changed, due to noise or pressing:
+  if (reading != lastButtonState) {
+    // reset the debouncing timer
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    // whatever the reading is at, it's been there for longer
+    // than the debounce delay, so take it as the actual current state:
+
+    // if the button state has changed:
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      if (buttonState == LOW) {
+        ret = true;
+      }
+    }
+  }
+
+  // save the reading.  Next time through the loop,
+  // it'll be the lastButtonState:
+  lastButtonState = reading;
+  return ret;
+}
+
+void getTime(void) {
+  static unsigned long previousMillis = 0;        // will store last time from update
+
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= 5000) {
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+    if (rtc.isok() == true)
+    {
+      tm = rtc.now();
+      hours = tm.hour();
+      minutes = tm.minute();
+      seconds = tm.second();
+    }
+    else
+    {
+      hours = 255;
+      minutes = 255;
+      seconds = 255;
+    }
+  }
 }
 
 #if 0
@@ -375,23 +500,20 @@ void showHelp(void)
 
 String getTimeStr(void) {
   String str = "";
-  tm = rtc.now();
-  hours = tm.hour();
-  minutes = tm.minute();
-  seconds = tm.second();
-  print2digits(hours);
-  Serial.write(':');
-  print2digits(minutes);
-  Serial.write(':');
-  print2digits(seconds);
-  Serial.println("\n");
-  if (hours < 10)
-    str += "0";
-  str += String(hours);
-  str += ":";
-  if (minutes < 10)
-    str += "0";
-  str += String(minutes);
+  if (hours == 255) {
+    str = "??:??";
+
+  }
+  else
+  {
+    if (hours < 10)
+      str += "0";
+    str += String(hours);
+    str += ":";
+    if (minutes < 10)
+      str += "0";
+    str += String(minutes);
+  }
   return str;
 }
 
@@ -414,11 +536,29 @@ String getDateStr(void) {
 }
 
 void print2digits(int number) {
-  if (number >= 0 && number < 10) {
-    Serial.write('0');
+  if (number == 255) {
+    Serial.print("??");
   }
-  Serial.print(number);
+  else {
+    if (number >= 0 && number < 10) {
+      Serial.write('0');
+    }
+    Serial.print(number);
+  }
 }
+
+void lcd2digits(int number) {
+  if (number == 255) {
+    lcd.serial->print("??");
+  }
+  else {
+    if (number >= 0 && number < 10) {
+      lcd.serial->write('0');
+    }
+    lcd.serial->print(number);
+  }
+}
+
 //===================================
 // For debugging and testing only
 //===================================
@@ -428,7 +568,7 @@ void printNews() {
   unsigned long currentMillis = millis();
   String str;
 
-  if (currentMillis - previousMillis >= 30000) {
+  if (currentMillis - previousMillis >= 60000) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
     clearFrameBuffer(OFF);
@@ -436,15 +576,31 @@ void printNews() {
     {
       case 0:
         Serial.println("In-Berlin");
+        lcdShowState("In-Berlin");
         i = printString(5, 0, ON, XLARGE, "IN-BERLIN");
-        fdState = 1;
+        fdState++;
         break;
       case 1:
         Serial.println("eLab");
+        lcdShowState("eLab     ");
         i = printString(5, 0, ON, XSMALL, "Di 19-22");
         i = printString(5, 8, ON, XSMALL, "Fr 19-01");
         i = printString(60, 0, ON, XLARGE, "ELAB");
-        fdState = 0;
+        fdState++;
+        break;
+      case 2:
+        Serial.println("BeLUG");
+        lcdShowState("BeLUG    ");
+        i = printString(5, 5, ON, XSMALL, "Mi 18-21");
+        i = printString(58, 0, ON, XLARGE, "BELUG");
+        fdState++;
+        break;
+      case 3:
+        Serial.println("Time");
+        lcdShowState("Time     ");
+        str = getTimeStr();
+        i = printString(28, 0, ON, XLARGE, str);
+        fdState++;
         break;
       default:
         fdState = 0;
@@ -588,23 +744,45 @@ void showFreeMem(void) {
 
     Serial.print("freeMemory()=");
     Serial.println(freeMemory());
+    lcd.position(0);      //line 0 character 0
+    lcd.serial->print(freeMemory());
   }
 }
 
+char stateSign[4] = { '\\', '|', '/', '-' };
+
 void showTime(void) {
   static unsigned long previousMillis = 0;        // will store last time from update
+  static int sign = 0;
   unsigned long currentMillis = millis();
 
-  if (currentMillis - previousMillis >= 30000) {
+  if (currentMillis - previousMillis >= 10000) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
-    tm = rtc.now();
-    hours = tm.hour();
-    minutes = tm.minute();
+    getTime();
     print2digits(hours);
     Serial.write(':');
     print2digits(minutes);
     Serial.println("\n");
+    lcd.position(16);      //line 0 character 0
+    lcd2digits(hours);
+    lcd.serial->write(':');
+    lcd2digits(minutes);
+    lcd.serial->write(':');
+    lcd2digits(seconds);
   }
+  //  lcd.position(30);
+  //  lcd.serial->write(stateSign[sign++]);
+  //  if (sign >= 4)
+  //    sign = 0;
+
 }
+
+void setLedColor(uint16_t red, uint16_t green, uint16_t blue)
+{
+  analogWrite(LED_RED, red);
+  analogWrite(LED_GREEN, green);
+  analogWrite(LED_BLUE, blue);
+}
+
 

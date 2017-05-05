@@ -12,9 +12,6 @@ const byte OE = 9;
 const byte RES = 2;
 const byte COMM = 5;
 const byte COL = 4;
-const byte LED_RED = 3;
-const byte LED_GREEN = 6;
-const byte LED_BLUE = 7;  // no PWM pin
 
 #define SET 1
 #define RESET 0
@@ -52,7 +49,7 @@ class FlipDot {
     FlipDot(int _sizeX, int _sizeY);
     void begin();
     void setPixel(int16_t x, int16_t y, uint16_t color);
-    void setLedColor(uint16_t red, uint16_t green, uint16_t blue);
+//    void setLedColor(uint16_t red, uint16_t green, uint16_t blue);
 
     void update(void);
     void updatePanel(int panel);
@@ -71,7 +68,8 @@ class FlipDot {
 
     byte fdRow1, fdRow2, fdCtrl;
  
-    int latchPin, oePin, resPin, colPin, comPin, redPin, greenPin, bluePin;;
+    int latchPin, oePin, resPin, colPin, comPin;
+//    int redPin, greenPin, bluePin;
     int sizeX, sizeY;
 };
 

@@ -46,7 +46,7 @@ void clearFrameBuffer(int color) {
 
 void updatePanel(void)
 {
-  //printFrameBuffer();
+  printFrameBuffer();
   flipdot.update();
 }
 //====================================================
