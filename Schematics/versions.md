@@ -25,4 +25,10 @@
 * COL Treiber Umstellung auf P-FET
 * COMM Treiber Umstellung auf N-FET
 
+### V1.4 – 10.06.2019:
+* schematic error 24V driver: cathode D2 connected to VCC1 (24V)
+* schematic error connectors: connector K4 pin29 connected to COL+
+* schematic error shiftregisters: replace uln2803 with uln2803a
+
+
 
