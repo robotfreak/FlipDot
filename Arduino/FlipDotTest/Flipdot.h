@@ -9,7 +9,8 @@
 
 const byte LATCH = 10;
 const byte OE = 9;
-const byte RES = 6;
+const byte RES = 2;
+const byte COMM = 5;
 const byte COL = 4;
 
 #define SET 1
@@ -39,7 +40,7 @@ const byte COL = 4;
 #define FD_PANEL3_SIG 5
 #define FD_PANEL2_SIG 4
 #define FD_PANEL1_SIG 3
-#define FD_COLUMN_SIG 2
+//#define FD_COLUMN_SIG 2
 #define FD_FRAME_SIG 1
 #define FD_STROBE_SIG 0
 
@@ -48,6 +49,7 @@ class FlipDot {
     FlipDot(int _sizeX, int _sizeY);
     void begin();
     void setPixel(int16_t x, int16_t y, uint16_t color);
+//    void setLedColor(uint16_t red, uint16_t green, uint16_t blue);
 
     void update(void);
     void updatePanel(int panel);
@@ -66,7 +68,8 @@ class FlipDot {
 
     byte fdRow1, fdRow2, fdCtrl;
  
-    int latchPin, oePin, resPin, colPin;
+    int latchPin, oePin, resPin, colPin, comPin;
+//    int redPin, greenPin, bluePin;
     int sizeX, sizeY;
 };
 

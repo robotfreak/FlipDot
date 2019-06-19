@@ -38,6 +38,3 @@ void loop() {
   FlipDotOn();
   delay(1000);
 }
-
-
-
