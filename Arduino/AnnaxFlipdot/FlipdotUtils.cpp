@@ -17,10 +17,14 @@
 #include "FlipdotUtils.h"
 
 
-FlipDotUtils::FlipDotUtils(FlipDot * _flipdot) {
-  this->flipdot = _flipdot;
+FlipDotUtils::FlipDotUtils(FlipDot & _flipdot) {
+  this->flipdot = &_flipdot;
 }
 
+
+void FlipDotUtils::addFlipdot(FlipDot & _flipdot) {
+  this->flipdot = &_flipdot;
+}
 
 //#################### Public Functions ####################################
 
@@ -44,7 +48,7 @@ void FlipDotUtils::clearFrameBuffer(int color) {
 void FlipDotUtils::updatePanel(void)
 {
   printFrameBuffer();
-  this->flipdot.update();
+  flipdot->update();
 }
 //====================================================
 // Sets a Pixel at row Y column X
@@ -158,6 +162,32 @@ void FlipDotUtils::vLine(int x, int color) {
   }
 }
 
+void FlipDotUtils::shiftFrameBuffer(int fs) {
+  unsigned int i,x;
+  
+  for (x = 0; x < X_SIZE+fs; x+=fs) {
+    for(i=0; i<fs; i++)
+    {
+      frameBuffer[x+i][0] = frameBuffer[x+i+1][0];
+      flipdot->setColumn(x, 0, frameBuffer[x+i][0]);
+      frameBuffer[x+i][1] = frameBuffer[x+i+1][1];
+      flipdot->setColumn(x, 1, frameBuffer[x+i][1]);
+    }
+  }
+}
+
+
+void FlipDotUtils::scrollFrameBuffer() {
+  unsigned int x;
+  
+  for (x = 0; x < X_SIZE; x++) {
+      frameBuffer[x][0] = frameBuffer[x][1];
+      flipdot->setColumn(x, 0, frameBuffer[x][0]);
+      frameBuffer[x][1] = 0;
+      flipdot->setColumn(x, 1, frameBuffer[x][1]);
+  }
+}
+
 
 //============================================
 // printString(int xOffs, int yOffs, int color, int size char s)
@@ -237,7 +267,7 @@ void FlipDotUtils::setFrameBuffer(int x, int y, int value) {
       wNot = 0xFF - w;
       frameBuffer[x][yByteNo] = frameBuffer[x][yByteNo] & wNot; // Logical AND set one bit to zero in the existing byte
     }
-    this->flipdot.setPixel(x, y, value);
+    flipdot->set(x, y, value);
   }
 }
 

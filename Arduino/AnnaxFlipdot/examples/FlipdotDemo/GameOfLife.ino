@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "Flipdot.h"
+#include "FlipdotUtils.h"
 
 #define NUMROWS 16
 #define NUMCOLS 25
@@ -66,11 +67,11 @@ void perturbInitialGameBoard() {
   for ( i = 0; i < numChanges; i++) {
     row = random(0, NUMROWS);
     col = random(0, NUMCOLS);
-    val = getFrameBuffer(col, row);    
+    val = fdu.getFrameBuffer(col, row);    
     if (val)
-      setFrameBuffer(col,row, 0);
+      fdu.setFrameBuffer(col,row, 0);
     else
-      setFrameBuffer(col,row, 1);
+      fdu.setFrameBuffer(col,row, 1);
   }
 }
 
@@ -82,9 +83,9 @@ void perturbInitialGameBoard() {
 int initGameBoard(int xOffs, int yOffs, int xSize, int ySize, const char *s)
 //void initGameBoard()
 {
-  clearFrameBuffer(OFF);
+  fdu.clearFrameBuffer(OFF);
   memset(newGameBoard, 0, sizeof(newGameBoard));
-  printBitmap(xOffs, yOffs, ON, xSize, ySize, s);
+  fdu.printBitmap(xOffs, yOffs, ON, xSize, ySize, s);
 
    // perturbInitialGameBoard();
 }
@@ -97,7 +98,7 @@ bool isCellAlive(char row, char col) {
   if (row < 0 || col < 0 || row >= NUMROWS || col >= NUMCOLS) {
     return false;
   }
-  return (getFrameBuffer(col,row));
+  return (fdu.getFrameBuffer(col,row));
 }
 
 
@@ -133,22 +134,22 @@ void calculateNewGameBoard() {
   for ( row = 0; row < NUMROWS; row++) {
     for ( col = 0; col < NUMCOLS; col++) {
       numNeighbors = countNeighbors(row, col);
-      if (getFrameBuffer(col,row) && numNeighbors < 2)
+      if (fdu.getFrameBuffer(col,row) && numNeighbors < 2)
       {
         // Any live cell with fewer than two live neighbours dies, as if caused by under-population.
         setNewGameBoard(col, row, OFF); // newGameBoard[col][row] = false;
       }
-      else if (getFrameBuffer(col,row) && (numNeighbors == 2 || numNeighbors == 3))
+      else if (fdu.getFrameBuffer(col,row) && (numNeighbors == 2 || numNeighbors == 3))
       {
         // Any live cell with two or three live neighbours lives on to the next generation.
          setNewGameBoard(col, row, ON); // newGameBoard[col][row] = true;
       }
-      else if (getFrameBuffer(col,row) && numNeighbors > 3)
+      else if (fdu.getFrameBuffer(col,row) && numNeighbors > 3)
       {
         // Any live cell with more than three live neighbours dies, as if by overcrowding.
          setNewGameBoard(col, row, OFF); // newGameBoard[col][row] = false;
       }
-      else if (!getFrameBuffer(col,row) && numNeighbors == 3)
+      else if (!fdu.getFrameBuffer(col,row) && numNeighbors == 3)
       {
         // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
          setNewGameBoard(col, row, ON); // newGameBoard[col][row] = true;
@@ -171,7 +172,7 @@ void swapGameBoards() {
   for ( row = 0; row < NUMROWS; row++) {
     for ( col = 0; col < NUMCOLS; col++) {
       val = getNewGameBoard(col, row);
-      setFrameBuffer(col, row, val);
+      fdu.setFrameBuffer(col, row, val);
     }
   }
 }
@@ -186,10 +187,10 @@ void showGameBoard() {
 
 void  GameOfLife(void) {
   int iterations = 0;
-  clearFrameBuffer(OFF);
-  printString(1, 1, ON, SMALL, "Game of");
-  printString(9, 9, ON, SMALL, "Life");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  fdu.printString(1, 1, ON, SMALL, "Game of");
+  fdu.printString(9, 9, ON, SMALL, "Life");
+  fdu.updatePanel();
   delay(3000);
   iterations++;
   //initGameBoard(24, 6, 4, 4, "03060200");  // r-pentomino
@@ -200,7 +201,7 @@ void  GameOfLife(void) {
   //initGameBoard(20, 8, 5, 5, "1D10030D15");   // infinity2
   initGameBoard(1, 8, 40, 1, "7FBE381FDF");   // infinity3
   //initGameBoard();
-  updatePanel();
+  fdu.updatePanel();
   delay(1000);
 
   while (iterations < 60)
@@ -208,11 +209,9 @@ void  GameOfLife(void) {
     //clearAll(OFF);
     showGameBoard();
     //printFrameBuffer();
-    updatePanel();
+    fdu.updatePanel();
     iterations++;
     Serial.println(iterations, DEC);
   }
 
 }
-
-

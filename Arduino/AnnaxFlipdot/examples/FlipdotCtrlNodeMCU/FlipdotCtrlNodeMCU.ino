@@ -41,6 +41,7 @@
 #include <ESP8266WiFi.h>
 
 #include "Flipdot.h"
+#include "FlipdotUtils.h"
 
 //how many clients should be able to telnet to this ESP8266
 #define MAX_SRV_CLIENTS 1
@@ -55,6 +56,7 @@ int inByte;
 String commandLine;
 
 FlipDot flipdot(FD_COLUMS, FD_ROWS);
+FlipDotUtils fdu(flipdot);
 
 void setup_wifi() {
 
@@ -252,14 +254,14 @@ void execCmd(void)
 
   // ======= Execute the respective command ========
   switch (cmd) {
-    case 'C':  clearFrameBuffer(color); Serial.println("C"); updatePanel(); break;
+    case 'C':  fdu.clearFrameBuffer(color); Serial.println("C"); fdu.updatePanel(); break;
     case 'T':  printTest(yVal); Serial.println("T"); break;
-    case 'S':  setPixel(xVal, yVal, color); break;
-    case 'H':  hLine(yVal, color); updatePanel(); Serial.println("H"); break;
-    case 'V':  vLine(xVal, color); updatePanel(); Serial.println("V"); break;
-    case 'P':  printString(xVal, yVal, color, fsize, outputString); updatePanel(); Serial.println("P");  break;
-    case 'B':  printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); updatePanel(); Serial.println("B"); break;
-    case 'U':  updatePanel(); Serial.println("U"); break;
+    case 'S':  fdu.setPixel(xVal, yVal, color); break;
+    case 'H':  fdu.hLine(yVal, color); fdu.updatePanel(); Serial.println("H"); break;
+    case 'V':  fdu.vLine(xVal, color); fdu.updatePanel(); Serial.println("V"); break;
+    case 'P':  fdu.printString(xVal, yVal, color, fsize, outputString); fdu.updatePanel(); Serial.println("P");  break;
+    case 'B':  fdu.printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); fdu.updatePanel(); Serial.println("B"); break;
+    case 'U':  fdu.updatePanel(); Serial.println("U"); break;
   }
 }
 
@@ -269,77 +271,77 @@ void execCmd(void)
 //===================================
 void printTest(int y) {
 
-  clearFrameBuffer(OFF);
-  i = printString(1, 0, ON, XSMALL, "ABCDEFGHIJKLM");
-  i = printString(1, 9, ON, XSMALL, "NOPQRSTUVWXYZ");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(1, 0, ON, XSMALL, "ABCDEFGHIJKLM");
+  i = fdu.printString(1, 9, ON, XSMALL, "NOPQRSTUVWXYZ");
+  fdu.updatePanel();
   Serial.println("Extra Small Font 5x7  ");
   delay(2000);
 
-  clearFrameBuffer(OFF);
-  i = printString(1, 0, ON, SMALL, "ABCDEFGHIJKLM");
-  i = printString(1, 8, ON, SMALL, "NOPQRSTUVWXYZ");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(1, 0, ON, SMALL, "ABCDEFGHIJKLM");
+  i = fdu.printString(1, 8, ON, SMALL, "NOPQRSTUVWXYZ");
+  fdu.updatePanel();
   Serial.println("Small Font 6x8       ");
   delay(2000);
 
-  clearFrameBuffer(OFF);
-  i = printString(1, 0, ON, SMALL, "abcdefghijklm");
-  i = printString(1, 8, ON, SMALL, "nopqrstuvwxyz");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(1, 0, ON, SMALL, "abcdefghijklm");
+  i = fdu.printString(1, 8, ON, SMALL, "nopqrstuvwxyz");
+  fdu.updatePanel();
   delay(2000);
 
-  clearFrameBuffer(OFF);
-  i = printString(1, 0, ON, MEDIUM, "ABCDEFGHIJKLM");
-  i = printString(1, 8, ON, MEDIUM, "NOPQRSTUVWXYZ");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(1, 0, ON, MEDIUM, "ABCDEFGHIJKLM");
+  i = fdu.printString(1, 8, ON, MEDIUM, "NOPQRSTUVWXYZ");
+  fdu.updatePanel();
   Serial.println("Medium Font 8x8      ");
   delay(2000);
 
-  clearFrameBuffer(OFF);
-  i = printString(1, 0, ON, MEDIUM, "abcdefghijklm");
-  i = printString(1, 8, ON, MEDIUM, "nopqrstuvwxyz");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(1, 0, ON, MEDIUM, "abcdefghijklm");
+  i = fdu.printString(1, 8, ON, MEDIUM, "nopqrstuvwxyz");
+  fdu.updatePanel();
   delay(2000);
 
-  clearFrameBuffer(OFF);
-  i = printString(2, 2, ON, LARGE, "ABCDEFGHIJKLM");
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(2, 2, ON, LARGE, "ABCDEFGHIJKLM");
   Serial.println("Large Font 8x12      ");
-  updatePanel();
+  fdu.updatePanel();
   delay(2000);
 
-  clearFrameBuffer(OFF);
-  i = printString(2, 2, ON, LARGE, "abcdefghijklm");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(2, 2, ON, LARGE, "abcdefghijklm");
+  fdu.updatePanel();
   delay(2000);
 
-  clearFrameBuffer(OFF);
-  i = printString(2, 0, ON, XLARGE, "ABCDEF");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(2, 0, ON, XLARGE, "ABCDEF");
+  fdu.updatePanel();
   Serial.println("Extra Large Font 9x16 ");
   delay(2000);
 
-  clearFrameBuffer(OFF);
-  i = printString(2, 0, ON, XLARGE, "123456");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(2, 0, ON, XLARGE, "123456");
+  fdu.updatePanel();
   delay(2000);
 
-  clearFrameBuffer(OFF);
-  //i =   printBitmap(0,0,ON,8,8,"1020408001020408");
-  i = printBitmap(2, 0, ON, 4, 4, "09000906");
-  i = printBitmap(2, 6, ON, 4, 4, "09000609");
-  i = printBitmap(2, 12, ON, 4, 4, "09000f00");
-  i = printBitmap(12, 0, ON, 8, 8, "0066660081423C00");
-  i = printBitmap(12, 8, ON, 8, 8, "006666003C428100");
-  i = printBitmap(22, 2, ON, 5, 5, "0A1F1F0E04");
-  i = printBitmap(32, 2, ON, 8, 9, "FF81422418244281FF");
-  //i = printBitmap(42, 0, ON, 16, 16, "1000010000100001111122224444888811112222444488881111222244448888");
-  //i = printBitmap(60, 0, ON, 16, 16, "FFFF800180018001800180018001FFFF8001800180018001800180018001FFFF");
-  //   vLine(0,ON);
-  //   vLine(77,ON);
-  //   hLine(0,ON);
-  //   hLine(15,ON);
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  //i =   fdu.printBitmap(0,0,ON,8,8,"1020408001020408");
+  i = fdu.printBitmap(2, 0, ON, 4, 4, "09000906");
+  i = fdu.printBitmap(2, 6, ON, 4, 4, "09000609");
+  i = fdu.printBitmap(2, 12, ON, 4, 4, "09000f00");
+  i = fdu.printBitmap(12, 0, ON, 8, 8, "0066660081423C00");
+  i = fdu.printBitmap(12, 8, ON, 8, 8, "006666003C428100");
+  i = fdu.printBitmap(22, 2, ON, 5, 5, "0A1F1F0E04");
+  i = fdu.printBitmap(32, 2, ON, 8, 9, "FF81422418244281FF");
+  //i = fdu.printBitmap(42, 0, ON, 16, 16, "1000010000100001111122224444888811112222444488881111222244448888");
+  //i = fdu.printBitmap(60, 0, ON, 16, 16, "FFFF800180018001800180018001FFFF8001800180018001800180018001FFFF");
+  //   fdu.fdu.vLine(0,ON);
+  //   fdu.vLine(77,ON);
+  //   fdu.hLine(0,ON);
+  //   fdu.hLine(15,ON);
+  fdu.updatePanel();
   Serial.println("Bitmap Grafik");
   delay(2000);
 }

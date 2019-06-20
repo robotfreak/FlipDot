@@ -6,11 +6,18 @@
 #include <SPI.h>
 
 #include "Flipdot.h"
-
+#if 0
 FlipDot::FlipDot()
 {
   this->sizeX = FD_COLUMS;
   this->sizeY = FD_ROWS;
+  //  this->invert = invert;
+}
+#endif
+FlipDot::FlipDot(int16_t x, int16_t y)
+{
+  this->sizeX = x;
+  this->sizeY = y;
   //  this->invert = invert;
 }
 
@@ -42,6 +49,12 @@ void FlipDot::begin()
   digitalWrite(this->comPin, HIGH);
 }
 
+void FlipDot::drawPixel(int16_t x, int16_t y, uint16_t color) {
+  if (x >= this->sizeX || y >= this->sizeY) return;
+  set(x,y,color);
+} 
+
+
 // Reverse the order of bits in a byte.
 // I.e. MSB is swapped with LSB, etc.
 byte FlipDot::bitReverse( byte x )
@@ -52,7 +65,7 @@ byte FlipDot::bitReverse( byte x )
   return x;
 }
 
-void FlipDot::setPixel(int16_t x, int16_t y, uint16_t color)
+void FlipDot::set(int16_t x, int16_t y, uint16_t color)
 {
   //  int y2dot[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
   if (y < FD_ROWS && x < FD_COLUMS && y >= 0 && x >= 0)
@@ -74,6 +87,14 @@ void FlipDot::setPixel(int16_t x, int16_t y, uint16_t color)
       this->fdMtx[idx][x] |= dot;
     else
       this->fdMtx[idx][x] &= ~dot;
+  }
+}
+
+void FlipDot::setColumn(uint8_t x, uint16_t y, uint8_t dat)
+{
+  if (x < FD_COLUMS && y < 2)
+  {
+    this->fdMtx[y][x] = dat;
   }
 }
 

@@ -1,16 +1,20 @@
+/*
+ * Used libraires:
+ * TimeLib https://github.com/PaulStoffregen/Time
+ * RTClib https://github.com/adafruit/RTClib
+ * SHT1x https://github.com/practicalarduino/SHT1x
+*/
+
 #include <Wire.h>
 #include <TimeLib.h>
 #include <RTClib.h>
 #include <SHT1x.h>
-#include "FlipDot.h"
-//#include "6x8_vertikal_MSB_1.h"
-//#include "8x14_vertikal_MSB_2.h"
-#include "annax9x16.h"
+#include "Flipdot.h"
+#include "FlipdotUtils.h"
 
-#define LATCH 10
-#define OE 9
 
-FlipDot fd(LATCH, OE);
+FlipDot fd(50, FD_ROWS);
+FlipDotUtils fdu(fd);
 int fontWidth, fontHeight;
 
 #define dataPin  4
@@ -138,5 +142,3 @@ void print2digits(int number) {
   }
   Serial.print(number);
 }
-
-

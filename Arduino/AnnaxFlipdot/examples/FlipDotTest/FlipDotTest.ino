@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include "Flipdot.h"
+//#include "FlipdotUtils.h"
 
 FlipDot flipdot(FD_COLUMS, FD_ROWS);
 
@@ -8,7 +9,7 @@ void setFlipdot(int color) {
 
   for (i = 0; i < FD_COLUMS; i++) {
     for (j = 0; j < FD_ROWS; j++) {
-      flipdot.setPixel(i, j, color);
+      flipdot.set(i, j, color);
     }
   }
 }

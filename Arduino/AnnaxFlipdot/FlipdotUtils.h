@@ -7,7 +7,7 @@
 #include "WProgram.h"
 #endif 
 
-#include "Flipdot.h"
+//#include "Flipdot.h"
 
 //================== Constants ===============================
 #define X_SIZE 115    // 115 column
@@ -16,10 +16,12 @@
 #define OFF 0
 #define ON 1
 
+class FlipDot;
 
-class FlipDotUtils : public FlipDot {
+class FlipDotUtils {
   public: 
-    FlipDotUtils(FlipDot * _flipdot);
+    FlipDotUtils(FlipDot & _flipdot);
+    void addFlipdot(FlipDot & _flipdot);
     void clearFrameBuffer(int color);
     void updatePanel(void);
     void setPixel(int x, int y, int color);
@@ -27,6 +29,8 @@ class FlipDotUtils : public FlipDot {
     int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, String s);
     void hLine(int y, int color);
     void vLine(int x, int color);
+    void shiftFrameBuffer(int fs);
+    void scrollFrameBuffer();
     int printString(int xOffs, int yOffs, int color, int size, String s);
     void printFrameBuffer(void);
     void setFrameBuffer(int x, int y, int value);

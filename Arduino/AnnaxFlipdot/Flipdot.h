@@ -44,12 +44,16 @@ const byte COL = 4;
 #define FD_FRAME_SIG 1
 #define FD_STROBE_SIG 0
 
+class FlipDotUtils;
+
 class FlipDot {
   public: 
-    FlipDot();
+    //FlipDot();
+    FlipDot(int16_t x, int16_t y);
     void begin();
-    void setPixel(int16_t x, int16_t y, uint16_t color);
-//    void setLedColor(uint16_t red, uint16_t green, uint16_t blue);
+    void drawPixel(int16_t, int16_t, uint16_t); 
+    void set(int16_t x, int16_t y, uint16_t color);
+    void setColumn(uint8_t x, uint16_t y, uint8_t dat);
 
     void update(void);
     void updatePanel(int panel);

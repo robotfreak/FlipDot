@@ -1,4 +1,4 @@
-#include "FlipDot.h"
+#include "Flipdot.h"
 #include "U8glib.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -93,9 +93,9 @@ void copyDat2Col(int ofs, int dat)
     for (int c = 0; c < 7; c++)
     {
       if (dat &  (1 << c))
-        flipdot.setPixel(ofs, c, 1);
+        flipdot.set(ofs, c, 1);
       else
-        flipdot.setPixel(ofs, c, 0);
+        flipdot.set(ofs, c, 0);
 
     }
   }
@@ -104,9 +104,9 @@ void copyDat2Col(int ofs, int dat)
     for (int c = 0; c < 7; c++)
     {
       if (dat &  (1 << c))
-        flipdot.setPixel(ofs-28, c+7, 1);
+        flipdot.set(ofs-28, c+7, 1);
       else
-        flipdot.setPixel(ofs-28, c+7, 0);
+        flipdot.set(ofs-28, c+7, 0);
     }
   }
   else if (ofs >= 56 && ofs < 84)
@@ -114,9 +114,9 @@ void copyDat2Col(int ofs, int dat)
     for (int c = 0; c < 2; c++)
     {
       if (dat &  (1 << c))
-        flipdot.setPixel(ofs-56, c+14, 1);
+        flipdot.set(ofs-56, c+14, 1);
       else
-        flipdot.setPixel(ofs-56, c+14, 0);
+        flipdot.set(ofs-56, c+14, 0);
     }
   }
 }
@@ -222,7 +222,7 @@ void setup() {
 //  u8g_FirstPage(&u8g);
   for(x=0;x<28;x++)
     for(y=0;y<16;y++)
-      flipdot.setPixel(x, y, 1);
+      flipdot.set(x, y, 1);
   flipdot.update();
   delay(3000);
       
@@ -260,5 +260,3 @@ void serialEvent() {
 
   }
 }
-
-

@@ -43,16 +43,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 #include <Wire.h>
-#include <MemoryFree.h>  // check memory usage 
-#include <SoftwareSerial.h>
 
 #include "Flipdot.h"
-
-const byte LED_RED = 3;
-const byte LED_GREEN = 6;
-const byte LED_BLUE = 7;  // no PWM pin
-
-const byte STOP_PIN = 2;
+#include "FlipdotUtils.h"
 
 int i, j;
 int inByte;
@@ -63,40 +56,19 @@ int fdMode = 0;
 int r, g, b;
 
 FlipDot flipdot(FD_COLUMS, FD_ROWS);
-
-int buttonState;             // the current reading from the input pin
-int lastButtonState = LOW;   // the previous reading from the input pin
-
-// the following variables are unsigned long's because the time, measured in miliseconds,
-// will quickly become a bigger number than can be stored in an int.
-unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
-
-//char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+FlipDotUtils fdu(flipdot);
 
 void setup() {
 
   Serial.begin(115200);
   Serial.println("FlipdotControl v1.1");
 
-  pinMode(STOP_PIN, INPUT_PULLUP);
-
   flipdot.begin();
-  updatePanel();
-  delay(1000);
-  setLedColor(0xFF, 0, 0);
-  delay(1000);
-  setLedColor(0, 0, 0xFF);
-  delay(1000);
+  fdu.updatePanel();
 
-  r = 0;
-  g = 0xFF;
-  b = 0;
-  setLedColor(r, g, b);
-
-  clearFrameBuffer(OFF);
-  i = printString(2, 0, ON, LARGE, "ELAB-SPACE");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(2, 0, ON, LARGE, "ELAB-SPACE");
+  fdu.updatePanel();
 }
 
 boolean checkForCommand(void) {
@@ -224,54 +196,39 @@ void execCommand() {
   }
   commandLine = "";    // Reset command mode
 
-  // ======= Debug only ===========
-  if (cmd == 'L')
+  Serial.println((char)cmd);
+  Serial.print("Color: ");
+  Serial.println(color);
+  Serial.print("xVal: ");
+  Serial.println(xVal);
+  Serial.print("yVal: ");
+  Serial.println(yVal);
+
+  if (cmd == 'B')
   {
-    Serial.println("ok");
-    Serial.print("Red: ");
-    Serial.println(r);
-    Serial.print("Green: ");
-    Serial.println(g);
-    Serial.print("Blue: ");
-    Serial.println(b);
+    Serial.print("xSiz: ");
+    Serial.println(xSiz);
+    Serial.print("ySiz: ");
+    Serial.println(ySiz);
   }
   else
   {
-    Serial.println((char)cmd);
-    Serial.print("Color: ");
-    Serial.println(color);
-    Serial.print("xVal: ");
-    Serial.println(xVal);
-    Serial.print("yVal: ");
-    Serial.println(yVal);
-
-    if (cmd == 'B')
-    {
-      Serial.print("xSiz: ");
-      Serial.println(xSiz);
-      Serial.print("ySiz: ");
-      Serial.println(ySiz);
-    }
-    else
-    {
-      Serial.print("font: ");
-      Serial.println(fontSize);
-    }
-    Serial.println(outputString);
+    Serial.print("font: ");
+    Serial.println(fontSize);
   }
+  Serial.println(outputString);
 
   fdMode = 0;
   fdState = 0;
   // ======= Execute the respective command ========
   switch (cmd) {
-    case 'C':  clearFrameBuffer(color); Serial.println("C"); updatePanel(); break;
-    case 'L':  setLedColor(r, g, b); Serial.println("Led"); break;
-    case 'S':  setPixel(xVal, yVal, color); break;
-    case 'H':  hLine(yVal, color); updatePanel(); Serial.println("H"); break;
-    case 'V':  vLine(xVal, color); updatePanel(); Serial.println("V"); break;
-    case 'P':  printString(xVal, yVal, color, fsize, outputString); updatePanel(); Serial.println("P");  break;
-    case 'B':  printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); updatePanel(); Serial.println("B"); break;
-    case 'U':  updatePanel(); Serial.println("U"); break;
+    case 'C':  fdu.clearFrameBuffer(color); Serial.println("C"); fdu.updatePanel(); break;
+    case 'S':  fdu.setPixel(xVal, yVal, color); break;
+    case 'H':  fdu.hLine(yVal, color); fdu.updatePanel(); Serial.println("H"); break;
+    case 'V':  fdu.vLine(xVal, color); fdu.updatePanel(); Serial.println("V"); break;
+    case 'P':  fdu.printString(xVal, yVal, color, fsize, outputString); fdu.updatePanel(); Serial.println("P");  break;
+    case 'B':  fdu.printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); fdu.updatePanel(); Serial.println("B"); break;
+    case 'U':  fdu.updatePanel(); Serial.println("U"); break;
     case 'f':  fdMode = 1; break;
     case 'n':  fdMode = 2; break;
     case 't':  fdMode = 3; break;
@@ -350,49 +307,49 @@ void printNews() {
   if (currentMillis - previousMillis >= 60000) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
-    clearFrameBuffer(OFF);
+    fdu.clearFrameBuffer(OFF);
     switch (fdState)
     {
       case 0:
         Serial.println("eLab");
-        i = printString(5, 0, ON, XSMALL, "Di 18-23");
-        i = printString(5, 8, ON, XSMALL, "Fr 18-..");
-        i = printString(60, 0, ON, XLARGE, "ELAB");
+        i = fdu.printString(5, 0, ON, XSMALL, "Di 18-23");
+        i = fdu.printString(5, 8, ON, XSMALL, "Fr 18-..");
+        i = fdu.printString(60, 0, ON, XLARGE, "ELAB");
         fdState++;
         break;
       case 1:
         Serial.println("url");
-        i = printString(5, 4, ON, XSMALL, "elab.in-berlin.de");
+        i = fdu.printString(5, 4, ON, XSMALL, "elab.in-berlin.de");
         fdState++;
         break;
       case 2:
         Serial.println("projekte");
-        i = printString(5, 0, ON, XSMALL, "Arduino, Robotik");
-        i = printString(7, 8, ON, XSMALL, "Raspberry, ESP...");
+        i = fdu.printString(5, 0, ON, XSMALL, "Arduino, Robotik");
+        i = fdu.printString(7, 8, ON, XSMALL, "Raspberry, ESP...");
         fdState++;
         break;
       case 3:
         Serial.println("komm");
-        i = printString(15, 4, ON, XSMALL, "Komm zu uns!");
+        i = fdu.printString(15, 4, ON, XSMALL, "Komm zu uns!");
         fdState++;
         break;
       case 4:
         Serial.println("eLab");
-        i = printString(5, 0, ON, XSMALL, "Dem freundlichen");
-        i = printString(20, 8, ON, XSMALL, "Makerspace");
+        i = fdu.printString(5, 0, ON, XSMALL, "Dem freundlichen");
+        i = fdu.printString(20, 8, ON, XSMALL, "Makerspace");
         fdState++;
         break;
       case 5:
         Serial.println("eLab");
-        i = printString(2, 0, ON, LARGE, "ELAB-SPACE");
+        i = fdu.printString(2, 0, ON, LARGE, "ELAB-SPACE");
         fdState = 0;
         break;
-     default:
+      default:
         fdState = 0;
         break;
 
     }
-    updatePanel();
+    fdu.updatePanel();
   }
 
 }
@@ -407,46 +364,46 @@ void printTest() {
   if (currentMillis - previousMillis >= 10000) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
-    clearFrameBuffer(OFF);
+    fdu.clearFrameBuffer(OFF);
     switch (fdState)
     {
       case 0:
-        i = printString(1, 0, ON, XSMALL, "ABCDEFGHIJKLM");
-        i = printString(1, 6, ON, XSMALL, "NOPQRSTUVWXYZ");
-        i = printString(1, 11, ON, XSMALL, "1234567890()[]");
+        i = fdu.printString(1, 0, ON, XSMALL, "ABCDEFGHIJKLM");
+        i = fdu.printString(1, 6, ON, XSMALL, "NOPQRSTUVWXYZ");
+        i = fdu.printString(1, 11, ON, XSMALL, "1234567890()[]");
         Serial.println("Extra Small Font 3x5  ");
         fdState++;
         break;
       case 1:
-        i = printString(1, 0, ON, SMALL, "ABCDEFGHIJKLM");
-        i = printString(1, 8, ON, SMALL, "NOPQRSTUVWXYZ");
+        i = fdu.printString(1, 0, ON, SMALL, "ABCDEFGHIJKLM");
+        i = fdu.printString(1, 8, ON, SMALL, "NOPQRSTUVWXYZ");
         Serial.println("Small Font 6x8       ");
         fdState++;
         break;
       case 2:
-        i = printString(1, 0, ON, MEDIUM, "ABCDEFGHIJKLM");
-        i = printString(1, 8, ON, MEDIUM, "NOPQRSTUVWXYZ");
+        i = fdu.printString(1, 0, ON, MEDIUM, "ABCDEFGHIJKLM");
+        i = fdu.printString(1, 8, ON, MEDIUM, "NOPQRSTUVWXYZ");
         Serial.println("Medium Font 8x8      ");
         fdState++;
         break;
       case 3:
-        i = printString(2, 2, ON, LARGE, "ABCDEFGHIJKLM");
+        i = fdu.printString(2, 2, ON, LARGE, "ABCDEFGHIJKLM");
         Serial.println("Large Font 8x12      ");
         fdState++;
         break;
       case 4:
-        i = printString(2, 0, ON, XLARGE, "ABCDEF");
+        i = fdu.printString(2, 0, ON, XLARGE, "ABCDEF");
         Serial.println("Extra Large Font 9x16 ");
         fdState++;
         break;
       case 5:
-        i = printBitmap(2, 0, ON, 4, 4, "09000906");
-        i = printBitmap(2, 6, ON, 4, 4, "09000609");
-        i = printBitmap(2, 12, ON, 4, 4, "09000f00");
-        i = printBitmap(12, 0, ON, 8, 8, "0066660081423C00");
-        i = printBitmap(12, 8, ON, 8, 8, "006666003C428100");
-        i = printBitmap(22, 2, ON, 5, 5, "0A1F1F0E04");
-        i = printBitmap(32, 2, ON, 8, 9, "FF81422418244281FF");
+        i = fdu.printBitmap(2, 0, ON, 4, 4, "09000906");
+        i = fdu.printBitmap(2, 6, ON, 4, 4, "09000609");
+        i = fdu.printBitmap(2, 12, ON, 4, 4, "09000f00");
+        i = fdu.printBitmap(12, 0, ON, 8, 8, "0066660081423C00");
+        i = fdu.printBitmap(12, 8, ON, 8, 8, "006666003C428100");
+        i = fdu.printBitmap(22, 2, ON, 5, 5, "0A1F1F0E04");
+        i = fdu.printBitmap(32, 2, ON, 8, 9, "FF81422418244281FF");
         Serial.println("Bitmap Grafik");
         fdState++;
         break;
@@ -454,7 +411,7 @@ void printTest() {
         fdState = 0;
         break;
     }
-    updatePanel();
+    fdu.updatePanel();
   }
 }
 
@@ -472,11 +429,11 @@ void flipTest(void) {
     switch (fdState)
     {
       case 0:
-        clearFrameBuffer(OFF);
+        fdu.clearFrameBuffer(OFF);
         fdState = 1;
         break;
       case 1:
-        clearFrameBuffer(ON);
+        fdu.clearFrameBuffer(ON);
         fdState = 0;
         break;
       default:
@@ -484,29 +441,6 @@ void flipTest(void) {
         break;
 
     }
-    updatePanel();
+    fdu.updatePanel();
   }
-}
-
-void showFreeMem(void) {
-  static unsigned long previousMillis = 0;        // will store last time from update
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - previousMillis >= 30000) {
-    // save the last time you blinked the LED
-    previousMillis = currentMillis;
-
-    Serial.print("freeMemory()=");
-    Serial.println(freeMemory());
-  }
-}
-
-char stateSign[4] = { '\\', '|', '/', '-' };
-
-
-void setLedColor(uint16_t red, uint16_t green, uint16_t blue)
-{
-  analogWrite(LED_RED, red);
-  analogWrite(LED_GREEN, green);
-  analogWrite(LED_BLUE, blue);
 }
