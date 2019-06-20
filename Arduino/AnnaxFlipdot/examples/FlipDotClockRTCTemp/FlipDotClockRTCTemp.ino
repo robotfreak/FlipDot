@@ -24,56 +24,12 @@ SHT1x sht1x(dataPin, clockPin);
 RTC_DS1307 rtc;
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-void initFlipDot(void)
-{
-  memset(fd.fdMtx, 0x00, sizeof(fd.fdMtx));
-  fontWidth = FONT_WIDTH;
-  fontHeight = FONT_HEIGHT;
-  fd.Update();
-}
-
-void fdWrite(int character, int offset)
-{
-  const unsigned char *pFtL;
-  const unsigned char *pFtH;
-  int col, ofs;
-
-  ofs = character;
-  //  if (ofs >=64) ofs +=32;
-
-  pFtL = &annax9x16[(ofs - 0x20) * FONT_WIDTH];
-  pFtH = &annax9x16[(ofs - 0x20) * FONT_WIDTH + FONT_WIDTH * 32];
-  col = offset * (fontWidth + 1);
-  for (int i = 0; i < FONT_WIDTH; i++, col++)
-  {
-    fd.fdMtx[1][col] = *pFtL++;
-    fd.fdMtx[0][col] = *pFtH++;
-  }
-  col += 1;
-}
-
-void fdPrintDigit(int number, int offset)
-{
-  if (number >= 0 && number < 10)
-  {
-    fdWrite('0', offset);
-    fdWrite(number + 0x30, offset + 1);
-  }
-  else
-  {
-    fdWrite((number / 10) + 0x30, offset);
-    fdWrite((number % 10) + 0x30, offset + 1);
-  }
-}
-
 
 void setup() {
-  initFlipDot();
+  fd.begin();
   delay(1000);
-  fdWrite('v', 1);
-  fdWrite('1', 2);
-  fdWrite('0', 3);
-  fd.Update();
+  fdu.printString(0, 0, ON, XLARGE,"v10");
+  fdu.updatePanel();
   delay(1000);
   if (! rtc.begin()) {
   }
@@ -94,7 +50,7 @@ int mode = 1;
 int hours, minutes;
 
 void loop() {
-
+  char buffer[8];
   float temp_c;
   float temp_f;
   float humidity;
@@ -107,38 +63,25 @@ void loop() {
     if (mode == 1)
     {
       temp_c = sht1x.readTemperatureC();
-      fdWrite(' ', 0);
-      fdPrintDigit((int) temp_c, 1);
-      fdWrite(0x22, 3);
-      fdWrite(' ', 4);
+      sprintf(buffer, " %c° ", temp_c);
+      fdu.printString(0, 0, ON, XLARGE,"v10");
     }
     else if (mode == 2)
     {
       humidity = sht1x.readHumidity();
-      fdWrite(' ', 0);
-      fdPrintDigit((int) humidity, 1);
-      fdWrite('%', 3);
-      fdWrite(' ', 4);
+      sprintf(buffer, " %c% ", humidity);
+      fdu.printString(0, 0, ON, XLARGE,"v10");
     }
     else if (mode == 3)
     {
       hours = tm.hour();
       minutes = tm.minute();
-      
-      fdPrintDigit(hours, 0);
-      fdWrite(':', 2);
-      fdPrintDigit(minutes, 3);
+      sprintf(buffer, "%2c:%2c ", hours, minutes);
+      fdu.printString(0, 0, ON, XLARGE,"v10");
     }
     mode++; if (mode == 4) mode = 1;
-    fd.Update();
+    fdu.updatePanel();
 
   }
   delay(1000);
-}
-
-void print2digits(int number) {
-  if (number >= 0 && number < 10) {
-    Serial.write('0');
-  }
-  Serial.print(number);
 }
