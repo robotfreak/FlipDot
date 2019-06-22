@@ -48,11 +48,12 @@
 #include <Wire.h>
 #include <TimeLib.h>
 #include <Timezone.h>    //https://github.com/JChristensen/Timezone
-#include <RTClib.h>
+#include <DS1307RTC.h>
 #include <MemoryFree.h>  // check memory usage 
 #include <SoftwareSerial.h>
 
 #include "Flipdot.h"
+#include "FlipdotUtils.h"
 #include "SparkFunSerLcd.h"
 
 const byte LED_RED = 3;
@@ -70,6 +71,7 @@ int fdMode = 0;
 int r, g, b;
 
 FlipDot flipdot(FD_COLUMS, FD_ROWS);
+FlipDotUtils fdu(flipdot);
 
 SoftwareSerial mySerial(12, 8); // RX, TX
 SparkFunSerLCD lcd;       //instantiate an LCD object
@@ -81,13 +83,13 @@ SparkFunSerLCD lcd;       //instantiate an LCD object
 
 //If TimeChangeRules are already stored in EEPROM, comment out the three
 //lines above and uncomment the line below.
-Timezone myTZ(100);       //assumes rules stored at EEPROM address 100
+//Timezone myTZ(100);       //assumes rules stored at EEPROM address 100
 
-TimeChangeRule *tcr;        //pointer to the time change rule, use to get TZ abbrev
-time_t utc, local;        // utc and local time
+//TimeChangeRule *tcr;        //pointer to the time change rule, use to get TZ abbrev
+//time_t utc, local;        // utc and local time
 
-RTC_DS1307 rtc;
-DateTime tm;
+DS1307RTC rtc;
+//DateTime tm;
 unsigned long current_time;
 unsigned long last_time;
 //int hours, minutes, seconds;
@@ -122,46 +124,27 @@ void setup() {
   pinMode(STOP_PIN, INPUT_PULLUP);
 
   flipdot.begin();
-  updatePanel();
+  fdu.updatePanel();
   delay(1000);
   setLedColor(0xFF, 0, 0);
   delay(1000);
   setLedColor(0, 0, 0xFF);
   delay(1000);
 
-  if (! rtc.begin()) {
-    lcdShowState("wait rtc");
-  }
-  else if (rtc.isok() == true)
-  {
-    if (! rtc.isrunning()) {
-      // following line sets the RTC to the date & time this sketch was compiled
-      //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-      // This line sets the RTC with an explicit date & time, for example to set
-      // January 21, 2014 at 3am you would call:
-      // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-      lcdShowState("set rtc");
-    }
-    else
-      lcdShowState("rtc ok");
-  }
+  setSyncProvider(RTC.get);   // the function to get the time from the RTC
+  if (timeStatus() != timeSet)
+    Serial.println("Unable to sync with the RTC");
   else
-    lcdShowState("rtc fail");
-
-  tm = rtc.now();
-  utc = tm.unixtime();
-  printTime(utc, "UTC");
-  local = myTZ.toLocal(utc, &tcr);
-  printTime(local, tcr -> abbrev);
+    Serial.println("RTC has set the system time");
 
   r = 0;
   g = 0xFF;
   b = 0;
   setLedColor(r, g, b);
 
-  clearFrameBuffer(OFF);
-  i = printString(5, 0, ON, XLARGE, "IN-BERLIN");
-  updatePanel();
+  fdu.clearFrameBuffer(OFF);
+  i = fdu.printString(5, 0, ON, XLARGE, "IN-BERLIN");
+  fdu.updatePanel();
 }
 
 void lcdShowState(String str)
@@ -337,14 +320,14 @@ void execCommand() {
   fdState = 0;
   // ======= Execute the respective command ========
   switch (cmd) {
-    case 'C':  clearFrameBuffer(color); Serial.println("C"); updatePanel(); break;
+    case 'C':  fdu.clearFrameBuffer(color); Serial.println("C"); fdu.updatePanel(); break;
     case 'L':  setLedColor(r, g, b); Serial.println("Led"); break;
-    case 'S':  setPixel(xVal, yVal, color); break;
-    case 'H':  hLine(yVal, color); updatePanel(); Serial.println("H"); break;
-    case 'V':  vLine(xVal, color); updatePanel(); Serial.println("V"); break;
-    case 'P':  printString(xVal, yVal, color, fsize, outputString); updatePanel(); Serial.println("P");  break;
-    case 'B':  printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); updatePanel(); Serial.println("B"); break;
-    case 'U':  updatePanel(); Serial.println("U"); break;
+    case 'S':  fdu.setPixel(xVal, yVal, color); break;
+    case 'H':  fdu.hLine(yVal, color); fdu.updatePanel(); Serial.println("H"); break;
+    case 'V':  fdu.vLine(xVal, color); fdu.updatePanel(); Serial.println("V"); break;
+    case 'P':  fdu.printString(xVal, yVal, color, fsize, outputString); fdu.updatePanel(); Serial.println("P");  break;
+    case 'B':  fdu.printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); fdu.updatePanel(); Serial.println("B"); break;
+    case 'U':  fdu.updatePanel(); Serial.println("U"); break;
     case 'f':  fdMode = 1; break;
     case 'n':  fdMode = 2; break;
     case 't':  fdMode = 3; break;
@@ -355,7 +338,44 @@ void execCommand() {
 
 void loop() {
   boolean btn;
-  getTime();
+
+  if (timeStatus() == timeSet) {
+    btn = checkButton(STOP_PIN);
+    if (btn == true) {
+      startTimeOut = hour();
+      if (startTimeOut < 22)
+        stopTimeOut = hour() + 2;
+      else
+        stopTimeOut = 1;
+      timeOut = true;
+      Serial.println("Stop Button pressed!");
+    }
+
+    if (timeOut == false) {
+      if ((hour() < 18) || (hour() > 22)) {
+        printNews();
+      }
+      else
+        lcdShowState("offline  ");
+    }
+    else {
+      lcdShowState("timeout  ");
+      if (hour() > stopTimeOut)
+        timeOut = false;
+    }
+
+    if (hour() < 3 || hour() > 16) {
+      setLedColor(r, g, b);
+    }
+    else {
+      setLedColor(0, 0, 0);
+    }
+  } else {
+    Serial.println("The time has not been set.  Please run the Time");
+    Serial.println("TimeRTCSet example, or DS1307RTC SetTime example.");
+    Serial.println();
+  }
+  //getTime();
   //showTime();
   //showFreeMem();
 
@@ -363,44 +383,6 @@ void loop() {
     execCommand();
 
   //getTimeStr();
-
-  btn = checkButton(STOP_PIN);
-  if (btn == true)
-  {
-    startTimeOut = hour(local);
-    if (startTimeOut < 22)
-      stopTimeOut = hour(local) + 2;
-    else
-      stopTimeOut = 1;
-    timeOut = true;
-    Serial.println("Stop Button pressed!");
-  }
-
-  if (timeOut == false)
-  {
-    if ((hour(local) < 18) || (hour(local) > 22))
-    {
-      printNews();
-    }
-    else
-      lcdShowState("offline  ");
-  }
-  else
-  {
-    lcdShowState("timeout  ");
-    if (hour(local) > stopTimeOut)
-      timeOut = false;
-  }
-
-  if (hour(local) < 3 || hour(local) > 16)
-  {
-    setLedColor(r, g, b);
-  }
-  else
-  {
-    setLedColor(0, 0, 0);
-  }
-
 
   switch (fdMode) {
     case 1:
@@ -411,9 +393,6 @@ void loop() {
       break;
     case 3:
       printTest();
-      break;
-    case 4:
-      printDateTime();
       break;
     default:
       break;
@@ -457,61 +436,6 @@ boolean checkButton(int buttonPin)
   return ret;
 }
 
-//Function to print time with time zone
-void printTime(time_t t, char *tz)
-{
-  sPrintI00(hour(t));
-  sPrintDigits(minute(t));
-  sPrintDigits(second(t));
-  Serial.print(' ');
-  Serial.print(dayShortStr(weekday(t)));
-  Serial.print(' ');
-  sPrintI00(day(t));
-  Serial.print(' ');
-  Serial.print(monthShortStr(month(t)));
-  Serial.print(' ');
-  Serial.print(year(t));
-  Serial.print(' ');
-  Serial.print(tz);
-  Serial.println();
-}
-
-//Print an integer in "00" format (with leading zero).
-//Input value assumed to be between 0 and 99.
-void sPrintI00(int val)
-{
-  if (val < 10) Serial.print('0');
-  Serial.print(val, DEC);
-  return;
-}
-
-//Print an integer in ":00" format (with leading zero).
-//Input value assumed to be between 0 and 99.
-void sPrintDigits(int val)
-{
-  Serial.print(':');
-  if (val < 10) Serial.print('0');
-  Serial.print(val, DEC);
-}
-
-void getTime(void) {
-  static unsigned long previousMillis = 0;        // will store last time from update
-
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - previousMillis >= 5000) {
-    // save the last time you blinked the LED
-    previousMillis = currentMillis;
-    if (rtc.isok() == true)
-    {
-      tm = rtc.now();
-      utc = tm.unixtime();
-      //printTime(utc, "UTC");
-      local = myTZ.toLocal(utc, &tcr);
-      printTime(local, tcr -> abbrev);
-    }
-  }
-}
 
 #if 0
 void showHelp(void)
@@ -553,54 +477,6 @@ void showHelp(void)
 }
 #endif
 
-String getTimeStr(time_t t) {
-  String str = "";
-  if (hour(t) < 10)
-    str += "0";
-  str += String(hour(t));
-  str += ":";
-  if (minute(local) < 10)
-    str += "0";
-  str += String(minute(t));
-  return str;
-}
-
-String getDateStr(time_t t) {
-  String str = "";
-  str += String(day(t));
-  str += ".";
-  //  if (month < 10)
-  //    str += "0";
-  str += String(month(t));
-  str += ".";
-  str += String(year(t));
-  return str;
-}
-
-void print2digits(int number) {
-  if (number == 255) {
-    Serial.print("??");
-  }
-  else {
-    if (number >= 0 && number < 10) {
-      Serial.write('0');
-    }
-    Serial.print(number);
-  }
-}
-
-void lcd2digits(int number) {
-  if (number == 255) {
-    lcd.serial->print("??");
-  }
-  else {
-    if (number >= 0 && number < 10) {
-      lcd.serial->write('0');
-    }
-    lcd.serial->print(number);
-  }
-}
-
 //===================================
 // For debugging and testing only
 //===================================
@@ -613,28 +489,28 @@ void printNews() {
   if (currentMillis - previousMillis >= 60000) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
-    clearFrameBuffer(OFF);
+    fdu.clearFrameBuffer(OFF);
     switch (fdState)
     {
       case 0:
         Serial.println("In-Berlin");
         lcdShowState("In-Berlin");
-        i = printString(5, 0, ON, XLARGE, "IN-BERLIN");
+        i = fdu.printString(5, 0, ON, XLARGE, "IN-BERLIN");
         fdState++;
         break;
       case 1:
         Serial.println("eLab");
         lcdShowState("eLab     ");
-        i = printString(5, 0, ON, XSMALL, "Di 19-22");
-        i = printString(5, 8, ON, XSMALL, "Fr 19-01");
-        i = printString(60, 0, ON, XLARGE, "ELAB");
+        i = fdu.printString(5, 0, ON, XSMALL, "Di 19-22");
+        i = fdu.printString(5, 8, ON, XSMALL, "Fr 19-01");
+        i = fdu.printString(60, 0, ON, XLARGE, "ELAB");
         fdState++;
         break;
       case 2:
         Serial.println("BeLUG");
         lcdShowState("BeLUG    ");
-        i = printString(5, 5, ON, XSMALL, "Mi 18-21");
-        i = printString(58, 0, ON, XLARGE, "BELUG");
+        i = fdu.printString(5, 5, ON, XSMALL, "Mi 18-21");
+        i = fdu.printString(58, 0, ON, XLARGE, "BELUG");
         fdState = 0;
         break;
       default:
@@ -642,7 +518,7 @@ void printNews() {
         break;
 
     }
-    updatePanel();
+    fdu.updatePanel();
   }
 
 }
@@ -657,46 +533,46 @@ void printTest() {
   if (currentMillis - previousMillis >= 10000) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
-    clearFrameBuffer(OFF);
+    fdu.clearFrameBuffer(OFF);
     switch (fdState)
     {
       case 0:
-        i = printString(1, 0, ON, XSMALL, "ABCDEFGHIJKLM");
-        i = printString(1, 6, ON, XSMALL, "NOPQRSTUVWXYZ");
-        i = printString(1, 11, ON, XSMALL, "1234567890()[]");
+        i = fdu.printString(1, 0, ON, XSMALL, "ABCDEFGHIJKLM");
+        i = fdu.printString(1, 6, ON, XSMALL, "NOPQRSTUVWXYZ");
+        i = fdu.printString(1, 11, ON, XSMALL, "1234567890()[]");
         Serial.println("Extra Small Font 3x5  ");
         fdState++;
         break;
       case 1:
-        i = printString(1, 0, ON, SMALL, "ABCDEFGHIJKLM");
-        i = printString(1, 8, ON, SMALL, "NOPQRSTUVWXYZ");
+        i = fdu.printString(1, 0, ON, SMALL, "ABCDEFGHIJKLM");
+        i = fdu.printString(1, 8, ON, SMALL, "NOPQRSTUVWXYZ");
         Serial.println("Small Font 6x8       ");
         fdState++;
         break;
       case 2:
-        i = printString(1, 0, ON, MEDIUM, "ABCDEFGHIJKLM");
-        i = printString(1, 8, ON, MEDIUM, "NOPQRSTUVWXYZ");
+        i = fdu.printString(1, 0, ON, MEDIUM, "ABCDEFGHIJKLM");
+        i = fdu.printString(1, 8, ON, MEDIUM, "NOPQRSTUVWXYZ");
         Serial.println("Medium Font 8x8      ");
         fdState++;
         break;
       case 3:
-        i = printString(2, 2, ON, LARGE, "ABCDEFGHIJKLM");
+        i = fdu.printString(2, 2, ON, LARGE, "ABCDEFGHIJKLM");
         Serial.println("Large Font 8x12      ");
         fdState++;
         break;
       case 4:
-        i = printString(2, 0, ON, XLARGE, "ABCDEF");
+        i = fdu.printString(2, 0, ON, XLARGE, "ABCDEF");
         Serial.println("Extra Large Font 9x16 ");
         fdState++;
         break;
       case 5:
-        i = printBitmap(2, 0, ON, 4, 4, "09000906");
-        i = printBitmap(2, 6, ON, 4, 4, "09000609");
-        i = printBitmap(2, 12, ON, 4, 4, "09000f00");
-        i = printBitmap(12, 0, ON, 8, 8, "0066660081423C00");
-        i = printBitmap(12, 8, ON, 8, 8, "006666003C428100");
-        i = printBitmap(22, 2, ON, 5, 5, "0A1F1F0E04");
-        i = printBitmap(32, 2, ON, 8, 9, "FF81422418244281FF");
+        i = fdu.printBitmap(2, 0, ON, 4, 4, "09000906");
+        i = fdu.printBitmap(2, 6, ON, 4, 4, "09000609");
+        i = fdu.printBitmap(2, 12, ON, 4, 4, "09000f00");
+        i = fdu.printBitmap(12, 0, ON, 8, 8, "0066660081423C00");
+        i = fdu.printBitmap(12, 8, ON, 8, 8, "006666003C428100");
+        i = fdu.printBitmap(22, 2, ON, 5, 5, "0A1F1F0E04");
+        i = fdu.printBitmap(32, 2, ON, 8, 9, "FF81422418244281FF");
         Serial.println("Bitmap Grafik");
         fdState++;
         break;
@@ -704,40 +580,9 @@ void printTest() {
         fdState = 0;
         break;
     }
-    updatePanel();
+    fdu.updatePanel();
   }
 }
-
-//===================================
-// For debugging and testing only
-//===================================
-void printDateTime(void) {
-  static unsigned long previousMillis = 0;        // will store last time from update
-
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - previousMillis >= 10000) {
-    // save the last time you blinked the LED
-    previousMillis = currentMillis;
-    switch (fdState)
-    {
-      case 0:
-        getTimeStr(local);
-        fdState = 1;
-        break;
-      case 1:
-        getDateStr(local);
-        fdState = 0;
-        break;
-      default:
-        fdState = 0;
-        break;
-
-    }
-    updatePanel();
-  }
-}
-
 
 //===================================
 // For debugging and testing only
@@ -753,11 +598,11 @@ void flipTest(void) {
     switch (fdState)
     {
       case 0:
-        clearFrameBuffer(OFF);
+        fdu.clearFrameBuffer(OFF);
         fdState = 1;
         break;
       case 1:
-        clearFrameBuffer(ON);
+        fdu.clearFrameBuffer(ON);
         fdState = 0;
         break;
       default:
@@ -765,7 +610,7 @@ void flipTest(void) {
         break;
 
     }
-    updatePanel();
+    fdu.updatePanel();
   }
 }
 
@@ -784,39 +629,9 @@ void showFreeMem(void) {
   }
 }
 
-char stateSign[4] = { '\\', '|', '/', '-' };
-
-void showTime(time_t t) {
-  static unsigned long previousMillis = 0;        // will store last time from update
-  static int sign = 0;
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - previousMillis >= 10000) {
-    // save the last time you blinked the LED
-    previousMillis = currentMillis;
-    print2digits(hour(t));
-    Serial.write(':');
-    print2digits(minute(t));
-    Serial.println("\n");
-    lcd.position(16);      //line 0 character 0
-    lcd2digits(hour(t));
-    lcd.serial->write(':');
-    lcd2digits(minute(t));
-    lcd.serial->write(':');
-    lcd2digits(second(t));
-  }
-  //  lcd.position(30);
-  //  lcd.serial->write(stateSign[sign++]);
-  //  if (sign >= 4)
-  //    sign = 0;
-
-}
-
 void setLedColor(uint16_t red, uint16_t green, uint16_t blue)
 {
   analogWrite(LED_RED, red);
   analogWrite(LED_GREEN, green);
   analogWrite(LED_BLUE, blue);
 }
-
-
