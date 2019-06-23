@@ -6,6 +6,8 @@
 #else
 #include "WProgram.h"
 #endif 
+#include <Adafruit_GFX.h> 
+#include "fonts/f5x7font5pt7b.h"
 
 const byte LATCH = 10;
 const byte OE = 9;
@@ -46,7 +48,7 @@ const byte COL = 4;
 
 class FlipDotUtils;
 
-class FlipDot {
+class FlipDot : public Adafruit_GFX {
   public: 
     //FlipDot();
     FlipDot(int16_t x, int16_t y);
@@ -66,6 +68,7 @@ class FlipDot {
 //    byte fdPanelSelect[FD_PANELS] = {FD_PANEL1_SIG, FD_PANEL2_SIG}; //, FD_PANEL3_SIG, FD_PANEL4_SIG, FD_PANEL5_SIG};
     byte fdPanelSize[FD_PANELS] = {25, 25, 20, 20, 25};
     byte fdPanelSelect[FD_PANELS] = {FD_PANEL1_SIG, FD_PANEL2_SIG, FD_PANEL3_SIG, FD_PANEL4_SIG, FD_PANEL5_SIG};
+    boolean *displayBuffer = NULL;
  
     byte fdMtx[2][FD_COLUMS];
     byte updPanel[FD_PANELS];

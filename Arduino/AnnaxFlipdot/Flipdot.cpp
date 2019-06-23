@@ -14,11 +14,13 @@ FlipDot::FlipDot()
   //  this->invert = invert;
 }
 #endif
-FlipDot::FlipDot(int16_t x, int16_t y)
+FlipDot::FlipDot(int _sizeX, int _sizeY) :
+        Adafruit_GFX(_sizeX, _sizeY)
 {
-  this->sizeX = x;
-  this->sizeY = y;
-  //  this->invert = invert;
+  this->sizeX = _sizeX;
+  this->sizeY = _sizeY;
+//  this->invert = invert; 
+  displayBuffer = (boolean*) calloc(FD_COLUMS*2, sizeof(boolean));
 }
 
 void FlipDot::begin()
@@ -51,6 +53,7 @@ void FlipDot::begin()
 
 void FlipDot::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if (x >= this->sizeX || y >= this->sizeY) return;
+  displayBuffer[y*this->sizeY+x] = (color);
   set(x,y,color);
 } 
 
