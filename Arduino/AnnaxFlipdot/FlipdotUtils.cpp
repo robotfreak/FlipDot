@@ -21,6 +21,9 @@ FlipDotUtils::FlipDotUtils(FlipDot & _flipdot) {
   this->flipdot = &_flipdot;
 }
 
+void FlipDotUtils::setSerialDebug(bool flag) {
+  this->serialDebug = flag;
+}
 
 void FlipDotUtils::addFlipdot(FlipDot & _flipdot) {
   this->flipdot = &_flipdot;

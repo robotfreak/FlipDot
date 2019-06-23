@@ -22,6 +22,7 @@ class FlipDotUtils {
   public: 
     FlipDotUtils(FlipDot & _flipdot);
     void addFlipdot(FlipDot & _flipdot);
+    void setSerialDebug(bool flag);
     void clearFrameBuffer(int color);
     void updatePanel(void);
     void setPixel(int x, int y, int color);
@@ -50,6 +51,7 @@ class FlipDotUtils {
     int printChar9x16(int xOffs, int yOffs, int color, unsigned char c);
 
     FlipDot * flipdot;
+    bool serialDebug = false;
 
 };
 

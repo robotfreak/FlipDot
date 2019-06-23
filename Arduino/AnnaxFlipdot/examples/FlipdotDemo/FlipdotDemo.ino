@@ -49,7 +49,7 @@ int i, j;
 int inByte;
 String commandLine;
 
-FlipDot flipdot(FD_COLUMS, FD_ROWS);
+FlipDot flipdot(50, FD_ROWS);
 FlipDotUtils fdu(flipdot);
 
 void setup() {
@@ -57,9 +57,9 @@ void setup() {
   Serial.begin(9600);
   flipdot.begin();
   flipdot.update();
+  fdu.setSerialDebug(false);
   Serial.println("Init completed");
   //showHelp();
-  //fdu.addFlipdot(flipdot);
   delay(1000);
 }
 
