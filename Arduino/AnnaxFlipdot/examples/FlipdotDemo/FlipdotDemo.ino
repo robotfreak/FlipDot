@@ -18,6 +18,8 @@
 //     H  Draw a horizontal line
 //     V  Draw a vertical line
 //     S  Set a pixel
+//     G  Game of Life
+//     T  Tetris
 //     U  Update Panel
 //   Color:
 //     B  Black
@@ -39,6 +41,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
+#include <avr/pgmspace.h>
 #include "Flipdot.h"
 #include "FlipdotUtils.h"
 
@@ -54,6 +57,8 @@ void setup() {
   Serial.begin(9600);
   flipdot.begin();
   flipdot.update();
+  Serial.println("Init completed");
+  //showHelp();
   //fdu.addFlipdot(flipdot);
   delay(1000);
 }
@@ -83,7 +88,7 @@ void loop() {
     }
 
     // ==== If command string is complete... =======
-    if (c == '\\') {
+    if (c == '\n') {
 
       cmd = commandLine.charAt(0);
       if (commandLine.charAt(2) == 'Y') color = 1; else color = 0;
@@ -168,13 +173,14 @@ void loop() {
       switch (cmd) {
         case 'C':  fdu.clearFrameBuffer(color); Serial.println("C"); fdu.updatePanel(); break;
         case 'G':  GameOfLife(); Serial.println("G"); break;
-        case 'T':  printTest(yVal); Serial.println("T"); break;
+        case 'T':  Tetris(); Serial.println("T"); break;
         case 'S':  fdu.setPixel(xVal, yVal, color); break;
         case 'H':  fdu.hLine(yVal, color); fdu.updatePanel(); Serial.println("H"); break;
         case 'V':  fdu.vLine(xVal, color); fdu.updatePanel(); Serial.println("V"); break;
         case 'P':  fdu.printString(xVal, yVal, color, fsize, outputString); fdu.updatePanel(); Serial.println("P");  break;
         case 'B':  fdu.printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); fdu.updatePanel(); Serial.println("B"); break;
         case 'U':  fdu.updatePanel(); Serial.println("U"); break;
+        case '?':  showHelp(); Serial.println("?"); break;
       }
     }
   }
@@ -260,4 +266,88 @@ void printTest(int y) {
   fdu.updatePanel();
   Serial.println("Bitmap Grafik");
   delay(2000);
+}
+
+const char string_0[] PROGMEM = "Flipdot Demo v2.0"; 
+const char string_1[] PROGMEM = "-----------------------";
+const char string_2[] PROGMEM = "Command format";
+const char string_3[] PROGMEM = "<Command>,<Color>,<x>,<y>,<size>,[<xsize>,<ysize>]<....string....>\\\n";
+const char string_4[] PROGMEM = "Commands:";
+const char string_5[] PROGMEM = "  C  Clear Screen";
+const char string_6[] PROGMEM = "  B  Draw a Bitmap";
+const char string_7[] PROGMEM = "  P  Print Text";
+const char string_8[] PROGMEM = "  H  Draw a horizontal line";
+const char string_9[] PROGMEM = "  V  Draw a vertical line";
+const char string_10[] PROGMEM = "  S  Set a pixel";
+const char string_11[] PROGMEM = "  G  Game of Life";
+const char string_12[] PROGMEM = "Color:";
+const char string_13[] PROGMEM = "  B  Black";
+const char string_14[] PROGMEM = "  Y  Yellow";
+const char string_15[] PROGMEM = "X,Y:";
+const char string_16[] PROGMEM = "  Required for all Print commands";
+const char string_17[] PROGMEM = "size:";
+const char string_18[] PROGMEM = "  Not required for Bitmap commands";
+const char string_19[] PROGMEM = "  S SMALL";
+const char string_20[] PROGMEM = "  M MEDIUM";
+const char string_21[] PROGMEM = "  L LARGE";
+const char string_22[] PROGMEM = "  X EXTRALARGE";
+const char string_23[] PROGMEM = "XSize,YSize:";
+const char string_24[] PROGMEM = "  Required only for Bitmap commands";
+const char string_25[] PROGMEM = "String:";
+const char string_26[] PROGMEM = "  Contains the characters to be printed";
+const char string_27[] PROGMEM = "\\n:";
+const char string_28[] PROGMEM = "The command lines is terminated by the \\n character";
+
+
+// Then set up a table to refer to your strings.
+
+const char *const string_table[] PROGMEM = {string_0,  string_1,  string_2,  string_3,  string_4,  string_5,
+string_6,  string_7,  string_8,  string_9,  string_10, string_11, string_12, string_13, string_14, string_15,
+string_16, string_17, string_18, string_19, string_20, string_21, string_22, string_23, string_24, string_25,
+string_26, string_27, string_28 };
+
+char buffer[60];  // make sure this is large enough for the largest string it must hold
+
+void showHelp(void)
+{
+  for (int i = 0; i < 29; i++) {
+    strcpy_P(buffer, (char *)pgm_read_word(&(string_table[i])));  // Necessary casts and dereferencing, just copy.
+    Serial.println(buffer);
+  }
+/*  
+  Serial.println("Flipdot Demo v2.0");
+  Serial.println("-----------------------");
+  Serial.println("Command format");
+  Serial.println("<Command>,<Color>,<x>,<y>,<size>,[<xsize>,<ysize>]<....string....>\\\n");
+  //
+  Serial.println("Commands:");
+  Serial.println("  C  Clear Screen");
+  Serial.println("  B  Draw a Bitmap");
+  Serial.println("  L  RGB LED");
+  Serial.println("  P  Print Text");
+  Serial.println("  H  Draw a horizontal line");
+  Serial.println("  V  Draw a vertical line");
+  Serial.println("  S  Set a pixel");
+  Serial.println("  U  Update Panel");
+  Serial.println("Color:");
+  Serial.println("  B  Black");
+  Serial.println("  Y  Yellow");
+  Serial.println("X,Y:");
+  Serial.println("  Required for all Print commands");
+  Serial.println("  Only Y is required for the horizontal line command \"H\"");
+  Serial.println("  Only X is required for the vertical line command \"V\"");
+  Serial.println("size:");
+  Serial.println("  Not required for Bitmap commands");
+  Serial.println("  S SMALL");
+  Serial.println("  M MEDIUM");
+  Serial.println("  L LARGE");
+  Serial.println("  X EXTRALARGE");
+  Serial.println("XSize,YSize:");
+  Serial.println("  Required only for Bitmap commands");
+  Serial.println("String:");
+  Serial.println("  Contains the characters to be printed");
+  Serial.println("\\n");
+  Serial.println("  The command lines is terminated by the \n character");
+  Serial.println("  It gets evaluated after reception of that character");
+*/  
 }

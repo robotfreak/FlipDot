@@ -3,7 +3,7 @@
 #include "FlipdotUtils.h"
 
 #define NUMROWS 16
-#define NUMCOLS 25
+#define NUMCOLS 50
 
 //uint8_t gameBoard[NUMROWS][NUMCOLS];
 uint8_t newGameBoard[NUMCOLS][NUMROWS/8];
@@ -202,7 +202,7 @@ void  GameOfLife(void) {
   initGameBoard(1, 8, 40, 1, "7FBE381FDF");   // infinity3
   //initGameBoard();
   fdu.updatePanel();
-  delay(1000);
+  delay(100);
 
   while (iterations < 60)
   {
