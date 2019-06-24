@@ -19,6 +19,8 @@ FlipDot::FlipDot(int _sizeX, int _sizeY) :
 {
   this->sizeX = _sizeX;
   this->sizeY = _sizeY;
+  this->panels = FD_PANELS;
+
 //  this->invert = invert; 
   displayBuffer = (boolean*) calloc(FD_COLUMS*2, sizeof(boolean));
 }
@@ -56,6 +58,11 @@ void FlipDot::drawPixel(int16_t x, int16_t y, uint16_t color) {
   displayBuffer[y*this->sizeY+x] = (color);
   set(x,y,color);
 } 
+
+void FlipDot::setPanels(int16_t cnt) {
+  if (cnt > 0 && cnt <= FD_PANELS)
+    this->panels = cnt;
+}
 
 
 // Reverse the order of bits in a byte.
@@ -196,17 +203,17 @@ void FlipDot::updatePanel(int panel)
 void FlipDot::update(void)
 {
   digitalWrite (this->colPin, HIGH);
-  delay(2000);
+  delay(50);
   // initial state
   this->fdRow1 = 0x00;
   this->fdRow2 = 0x00;
   this->fdCtrl &= ~FD_PANEL_MASK;
   // shift out frames
-  for (int f = 0; f < FD_PANELS; f++)
+  for (int f = 0; f < this->panels; f++)
   {
     updatePanel(f);
   }
-  delay(2000);
+  delay(50);
   digitalWrite (this->colPin, LOW);
 }
 
