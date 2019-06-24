@@ -27,8 +27,8 @@ int x_pixels = 50;
 int y_pixels = 16;
 
 //Paddle Parameters
-int paddle_height = 10;
-int paddle_width = 3;
+int paddle_height = 4;
+int paddle_width = 1;
 
 //int speakerPin = 8;
 
@@ -45,7 +45,7 @@ int y_vel = 1;
 
 // Ball position:
 int x_pos = 5;
-int y_pos = 32;
+int y_pos = 16;
 
 // Paddle positions:
 int l_pos = 0;
@@ -87,6 +87,7 @@ void setup() {
   randomSeed(analogRead(0));
 
   flipdot.begin();
+  flipdot.setPanels(2);
 
   //flipdot.display();
   flipdot.update();
@@ -97,7 +98,7 @@ void setup() {
   flipdot.setTextSize(1);
   flipdot.setTextColor(YELLOW);
   flipdot.setCursor(flipdot.width() / 2 - 20, 0);
-  flipdot.println("Ardunio");
+  flipdot.println("Arduino");
   flipdot.setCursor(flipdot.width() / 2 - 20 / 2, 8);
   flipdot.println("Pong");
   //flipdot.display();
