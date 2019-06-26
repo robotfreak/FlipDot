@@ -1,0 +1,35 @@
+#######################################
+# Syntax Coloring Map For FlipDot
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	KEYWORD2
+drawPixel	KEYWORD2
+set	KEYWORD2
+setColumn	KEYWORD2
+update	KEYWORD2
+updatePanel	KEYWORD2
+clearFrameBuffer	KEYWORD2
+hex2int	KEYWORD2
+printBitmap	KEYWORD2
+hLine	KEYWORD2
+vLine	KEYWORD2
+shiftFrameBuffer	KEYWORD2
+scrollFrameBuffer	KEYWORD2
+printString	KEYWORD2
+printFrameBuffer	KEYWORD2
+setFrameBuffer	KEYWORD2
+getFrameBuffer	KEYWORD2
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
