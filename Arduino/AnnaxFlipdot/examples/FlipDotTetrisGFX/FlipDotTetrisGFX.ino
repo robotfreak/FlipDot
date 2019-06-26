@@ -42,11 +42,15 @@ short buttondelay = 150;
 short btdowndelay = 30;
 short btsidedelay = 80;
 unsigned char blocktype;
+unsigned char offset;
 unsigned char blockrotation;
 
-boolean block[8][18]; //2 extra for rotation
-boolean pile[8][16];
-boolean disp[8][16];
+#define rows 20
+#define cols 10
+
+boolean block[cols][rows+2]; //2 extra for rotation
+boolean pile[cols][rows];
+boolean disp[cols][rows];
 
 boolean gameoverFlag = false;
 
@@ -117,17 +121,17 @@ boolean moveleft()
   {
     int i;
     int j;
-    for (i=0;i<7;i++)
+    for (i=0;i<cols-1;i++)
     {
-      for (j=0;j<16;j++)      
+      for (j=0;j<rows;j++)      
       {
         block[i][j]=block[i+1][j];
       }
     }
     
-    for (j=0;j<16;j++)      
+    for (j=0;j<rows;j++)      
     {
-      block[7][j]=0;
+      block[cols-1][j]=0;
     }    
 
     updateMatrix();
@@ -147,15 +151,15 @@ boolean moveright()
   {
     int i;
     int j;
-    for (i=7;i>0;i--)
+    for (i=cols-1;i>0;i--)
     {
-      for (j=0;j<16;j++)      
+      for (j=0;j<rows;j++)      
       {
         block[i][j]=block[i-1][j];
       }
     }
 
-    for (j=0;j<16;j++)      
+    for (j=0;j<rows;j++)      
     {
       block[0][j]=0;
     }    
@@ -212,11 +216,15 @@ void updateMatrix()
 {
   int i;
   int j;  
-  for (i=0;i<8;i++)
+  for (i=0;i<cols;i++)
   {
-    for (j=0;j<16;j++)
+    for (j=0;j<rows;j++)
     {
       disp[i][j] = block[i][j] | pile[i][j];
+      if (disp[i][j])
+        matrix.drawPixel(j,i,YELLOW);
+      else
+        matrix.drawPixel(j,i,BLACK);
     }
   }
   matrix.update();
@@ -236,9 +244,9 @@ void rotate()
   int i;
   int j;
   //detect left
-  for (i=7;i>=0;i--)
+  for (i=cols-1;i>=0;i--)
   {
-    for (j=0;j<16;j++)
+    for (j=0;j<rows;j++)
     {
       if (block[i][j])
       {
@@ -248,9 +256,9 @@ void rotate()
   }
   
   //detect up
-  for (i=15;i>=0;i--)
+  for (i=rows-1;i>=0;i--)
   {
-    for (j=0;j<8;j++)
+    for (j=0;j<cols;j++)
     {
       if (block[j][i])
       {
@@ -604,9 +612,9 @@ void rotate()
   //if rotating made block and pile overlap, push rows up
   while (!check_overlap())
   {
-    for (i=0;i<18;i++)
+    for (i=0;i<rows+2;i++)
     {
-      for (j=0;j<8;j++)
+      for (j=0;j<cols;j++)
       {
          block[j][i] = block[j][i+1];
       }
@@ -627,15 +635,15 @@ void movedown()
   {
     //move down
     int i;
-    for (i=15;i>=0;i--)
+    for (i=rows-1;i>=0;i--)
     {
       int j;
-      for (j=0;j<8;j++)
+      for (j=0;j<cols;j++)
       {
         block[j][i] = block[j][i-1];
       }
     }
-    for (i=0;i<7;i++)
+    for (i=0;i<cols-1;i++)
     {
       block[i][0] = 0;
     }
@@ -645,9 +653,9 @@ void movedown()
     //merge and new block
     int i;
     int j;    
-    for (i=0;i<8;i++)
+    for (i=0;i<cols;i++)
     {
-     for(j=0;j<16;j++)
+     for(j=0;j<rows;j++)
      {
        if (block[i][j])
        {
@@ -668,9 +676,9 @@ boolean check_overlap()
 {
   int i;
   int j;  
-  for (i=0;i<16;i++)
+  for (i=0;i<rows;i++)
   {
-    for (j=0;j<7;j++)
+    for (j=0;j<cols-1;j++)
     {
        if (block[j][i])
        {
@@ -679,9 +687,9 @@ boolean check_overlap()
        }        
     }
   }
-  for (i=16;i<18;i++)
+  for (i=rows;i<rows+2;i++)
   {
-    for (j=0;j<7;j++)
+    for (j=0;j<cols-1;j++)
     {
        if (block[j][i])
        {
@@ -701,19 +709,19 @@ void check_gameover()
   int j;
   int cnt=0;;
   
-  for(i=15;i>=0;i--)
+  for(i=rows-1;i>=0;i--)
   {
     cnt=0;
-    for (j=0;j<8;j++)
+    for (j=0;j<cols;j++)
     {
       if (pile[j][i])
       {
         cnt ++;
       }
     }    
-    if (cnt == 8)
+    if (cnt == cols)
     {
-      for (j=0;j<8;j++)
+      for (j=0;j<cols;j++)
       {
         pile[j][i]=0;
       }        
@@ -723,12 +731,12 @@ void check_gameover()
       int k;
       for(k=i;k>0;k--)
       {
-        for (j=0;j<8;j++)
+        for (j=0;j<cols;j++)
         {
           pile[j][k] = pile[j][k-1];
         }                
       }
-      for (j=0;j<8;j++)
+      for (j=0;j<cols;j++)
       {
         pile[j][0] = 0;
       }        
@@ -742,7 +750,7 @@ void check_gameover()
   }  
   
   
-  for(i=0;i<8;i++)
+  for(i=0;i<cols;i++)
   {
     if (pile[i][0])
       gameover();
@@ -772,9 +780,9 @@ void gameover()
     {
       gameoverFlag = false;    
     
-      for(i=15;i>=0;i--)
+      for(i=rows-1;i>=0;i--)
       {
-        for (j=0;j<8;j++)
+        for (j=0;j<cols;j++)
         {
           pile[j][i]=0;
         }             
@@ -794,6 +802,7 @@ void newBlock()
   
   
   blocktype = random(7);
+  offset = cols/2; //random(cols-4);
   
   if (blocktype == 0)
   // 0
@@ -801,70 +810,70 @@ void newBlock()
   // 0
   // 0
   {
-    block[3][0]=1;
-    block[3][1]=1;
-    block[3][2]=1;
-    block[3][3]=1;      
+    block[offset][0]=1;
+    block[offset][1]=1;
+    block[offset][2]=1;
+    block[offset][3]=1;      
   }
 
   if (blocktype == 1)
   // 0
   // 0 0 0
   {
-    block[2][0]=1;
-    block[2][1]=1;
-    block[3][1]=1;
-    block[4][1]=1;        
+    block[offset][0]=1;
+    block[offset][1]=1;
+    block[offset+1][1]=1;
+    block[offset+2][1]=1;        
   }
   
   if (blocktype == 2)
   //     0
   // 0 0 0
   {
-    block[4][0]=1;
-    block[2][1]=1;
-    block[3][1]=1;
-    block[4][1]=1;         
+    block[offset+2][0]=1;
+    block[offset][1]=1;
+    block[offset+1][1]=1;
+    block[offset+2][1]=1;         
   }
 
   if (blocktype == 3)
   // 0 0
   // 0 0
   {
-    block[3][0]=1;
-    block[3][1]=1;
-    block[4][0]=1;
-    block[4][1]=1;          
+    block[offset][0]=1;
+    block[offset][1]=1;
+    block[offset+1][0]=1;
+    block[offset+1][1]=1;          
   }    
 
   if (blocktype == 4)
   //   0 0
   // 0 0
   {
-    block[4][0]=1;
-    block[5][0]=1;
-    block[3][1]=1;
-    block[4][1]=1;         
+    block[offset+1][0]=1;
+    block[offset+2][0]=1;
+    block[offset][1]=1;
+    block[offset+1][1]=1;         
   }    
   
   if (blocktype == 5)
   //   0
   // 0 0 0
   {
-    block[4][0]=1;
-    block[3][1]=1;
-    block[4][1]=1;
-    block[5][1]=1;       
+    block[offset+1][0]=1;
+    block[offset][1]=1;
+    block[offset+1][1]=1;
+    block[offset+2][1]=1;       
   }        
 
   if (blocktype == 6)
   // 0 0
   //   0 0
   {
-    block[3][0]=1;
-    block[4][0]=1;
-    block[4][1]=1;
-    block[5][1]=1;         
+    block[offset][0]=1;
+    block[offset+1][0]=1;
+    block[offset+1][1]=1;
+    block[offset+2][1]=1;         
   }    
 
   blockrotation = 0;
@@ -877,13 +886,13 @@ boolean space_below()
 { 
   int i;
   int j;  
-  for (i=15;i>=0;i--)
+  for (i=rows-1;i>=0;i--)
   {
-    for (j=0;j<8;j++)
+    for (j=0;j<cols;j++)
     {
        if (block[j][i])
        {
-         if (i == 15)
+         if (i == rows-1)
            return false;
          if (pile[j][i+1])
          {
@@ -902,9 +911,9 @@ boolean space_left2()
 { 
   int i;
   int j;  
-  for (i=15;i>=0;i--)
+  for (i=rows-1;i>=0;i--)
   {
-    for (j=0;j<8;j++)
+    for (j=0;j<cols;j++)
     {
        if (block[j][i])
        {
@@ -927,9 +936,9 @@ boolean space_left3()
 { 
   int i;
   int j;  
-  for (i=15;i>=0;i--)
+  for (i=rows-1;i>=0;i--)
   {
-    for (j=0;j<8;j++)
+    for (j=0;j<cols;j++)
     {
        if (block[j][i])
        {
@@ -952,9 +961,9 @@ boolean space_left()
 { 
   int i;
   int j;  
-  for (i=15;i>=0;i--)
+  for (i=rows-1;i>=0;i--)
   {
-    for (j=0;j<8;j++)
+    for (j=0;j<cols;j++)
     {
        if (block[j][i])
        {
@@ -977,13 +986,13 @@ boolean space_right()
 { 
   int i;
   int j;  
-  for (i=15;i>=0;i--)
+  for (i=rows-1;i>=0;i--)
   {
-    for (j=0;j<8;j++)
+    for (j=0;j<cols;j++)
     {
        if (block[j][i])
        {
-         if (j == 7)
+         if (j == cols-1)
            return false;
          if (pile[j+1][i])
          {
@@ -1002,13 +1011,13 @@ boolean space_right3()
 { 
   int i;
   int j;  
-  for (i=15;i>=0;i--)
+  for (i=rows-1;i>=0;i--)
   {
-    for (j=0;j<8;j++)
+    for (j=0;j<cols;j++)
     {
        if (block[j][i])
        {
-         if (j == 7||j == 6||j == 5)
+         if (j == cols-1||j == cols-2||j == cols-3)
            return false;
          if (pile[j+1][i] |pile[j+2][i] | pile[j+3][i])
          {
@@ -1027,13 +1036,13 @@ boolean space_right2()
 { 
   int i;
   int j;  
-  for (i=15;i>=0;i--)
+  for (i=rows-1;i>=0;i--)
   {
-    for (j=0;j<8;j++)
+    for (j=0;j<cols;j++)
     {
        if (block[j][i])
        {
-         if (j == 7 || j == 6)
+         if (j == cols-1 || j == cols-2)
            return false;
          if (pile[j+1][i] |pile[j+2][i])
          {
@@ -1046,7 +1055,7 @@ boolean space_right2()
 }
 
 
-
+#if 0
 //**********************************************************************************************************************************************************  
 void MatrixRefresh()
 {
@@ -1167,3 +1176,4 @@ void MatrixRefresh()
       }         
     }    
 }
+#endif
