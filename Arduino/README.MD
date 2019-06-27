@@ -16,18 +16,19 @@
  FlipDot flipdot(FD_COLS, FD_ROWS);  // Number of Rows (up to 115), Number of Colums (16) 
  
 ## Funktionen:
- flipdot.begin();                  // Start Flipdot, initialize ports
- flipdot.setPanels(int num);       // use only <num> numbers of panels. Speed up the Display 
- flipdot.update();                 // updates all flipdot panels
- flipdot.setSerialDebug(bool val); // <true> enabled serial debug output, <false> disabled serial debug output (speeds up display)
- flipdot.setPixel(x,y,color);      // set/clear a pixel YELLOW to switch pixel on, BLACK to switch pixel off)
- flipdot.drawPixel(x,y,color);     // set/clear a pixel YELLOW to switch pixel on, BLACK to switch pixel off) for Adafruit GFX library
+* flipdot.begin();                  // Start Flipdot, initialize ports
+* flipdot.setPanels(int num);       // use only <num> numbers of panels. Speed up the Display 
+* flipdot.update();                 // updates all flipdot panels
+* flipdot.setSerialDebug(bool val); // <true> enabled serial debug output, <false> disabled serial debug output (speeds up display)
+* flipdot.setPixel(x,y,color);      // set/clear a pixel YELLOW to switch pixel on, BLACK to switch pixel off)
+* flipdot.drawPixel(x,y,color);     // set/clear a pixel YELLOW to switch pixel on, BLACK to switch pixel off) for Adafruit GFX library
+* ...
  
- All functions of AdafruitGFX library can be used, too:
- flipdot.setCursor(int x, int y); 
- flipdot.setTextSize(int);
- flipdot.println(char *);
- ...
+All functions of AdafruitGFX library can be used, too:
+* flipdot.setCursor(int x, int y); 
+* flipdot.setTextSize(int);
+* flipdot.println(char *);
+* ...
 
 
 # Bedien Nachrichten FlipdotDemo
