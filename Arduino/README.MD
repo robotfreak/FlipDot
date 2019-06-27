@@ -1,13 +1,38 @@
 # Programm Übersicht
 
+* FlipDotTest: Togglen aller Flipdots (an/aus)
+* FlipDotGFXDemo: Adafruit GFX library Demo
+* FlipDotGameOfLifeGFX: Game of life Simulation mit Adafruit GFX library 
+* FlipDotPongGFX: Pong Game mit Adafruit GFX library 
+* FlipDotTetrisGFX: Tetris mit with Adafruit GFX library 
 * FlipdotClockRTCTemp: Anzeige von Uhrzeit, Temperatur und Öuftfeuchtigkeit
-* FlipdotTest: Togglen aller Flipdots (an/aus)
-* FlipdotCtrl: Fernbedienung über serielle Schnittstelle, Ausgabe von Text, Grafik mit Arduino Nano
+* FlipdotDemo: Fernbedienung über serielle Schnittstelle, Ausgabe von Text, Grafik mit Arduino Nano
 * FlipdotCtrlNodeMCU: Fernbedienung über serielle Schnittstelle oder WiFi (Telnet), Ausgabe von Text, Grafik mit NodeMCU (ESP8266)
 
-# Bedien Nachrichten FlipdotCtrl
+# FlipDot API
 
-FlipdotCtrl basiert auf dem FlipdotHack von C-Hack http://c-hack.de/projekte/flipdot-hack/ 
+## Konstruktor: 
+
+ FlipDot flipdot(FD_COLS, FD_ROWS);  // Number of Rows (up to 115), Number of Colums (16) 
+ 
+## Funktionen:
+ flipdot.begin();                  // Start Flipdot, initialize ports
+ flipdot.setPanels(int num);       // use only <num> numbers of panels. Speed up the Display 
+ flipdot.update();                 // updates all flipdot panels
+ flipdot.setSerialDebug(bool val); // <true> enabled serial debug output, <false> disabled serial debug output (speeds up display)
+ flipdot.setPixel(x,y,color);      // set/clear a pixel YELLOW to switch pixel on, BLACK to switch pixel off)
+ flipdot.drawPixel(x,y,color);     // set/clear a pixel YELLOW to switch pixel on, BLACK to switch pixel off) for Adafruit GFX library
+ 
+ All functions of AdafruitGFX library can be used, too:
+ flipdot.setCursor(int x, int y); 
+ flipdot.setTextSize(int);
+ flipdot.println(char *);
+ ...
+
+
+# Bedien Nachrichten FlipdotDemo
+
+FlipdotDemo basiert auf dem FlipdotHack von C-Hack http://c-hack.de/projekte/flipdot-hack/ 
 
 ```
  Command format
