@@ -41,9 +41,16 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#include <avr/pgmspace.h>
+//#include <avr/pgmspace.h>
+#include <Arduino.h>
 #include "Flipdot.h"
 #include "FlipdotUtils.h"
+
+const int8_t LATCH_PIN = 33;
+const int8_t OE_PIN = 26;
+const int8_t COMM_PIN = 35;
+const int8_t COL_PIN = 34;
+
 
 int i, j;
 int inByte;
@@ -55,7 +62,7 @@ FlipDotUtils fdu(flipdot);
 void setup() {
 
   Serial.begin(9600);
-  flipdot.begin();
+  flipdot.begin(LATCH_PIN, OE_PIN, COL_PIN, COMM_PIN);
   flipdot.update();
   fdu.setSerialDebug(false);
   Serial.println("Init completed");

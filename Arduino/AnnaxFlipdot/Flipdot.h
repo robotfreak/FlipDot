@@ -11,7 +11,6 @@
 
 const byte LATCH = 10;
 const byte OE = 9;
-const byte RES = 2;
 const byte COMM = 5;
 const byte COL = 4;
 
@@ -52,7 +51,8 @@ class FlipDot : public Adafruit_GFX {
   public: 
     //FlipDot();
     FlipDot(int16_t x, int16_t y);
-    void begin();
+    void begin(int8_t latch, int8_t oe, int8_t col, int8_t comm);
+    void begin(void);
     void setOnTime(int time);
     void setPanels(int16_t cnt);
     void drawPixel(int16_t, int16_t, uint16_t); 

@@ -14,7 +14,7 @@ FlipDot::FlipDot()
   //  this->invert = invert;
 }
 #endif
-FlipDot::FlipDot(int _sizeX, int _sizeY) :
+FlipDot::FlipDot(int16_t _sizeX, int16_t _sizeY) :
         Adafruit_GFX(_sizeX, _sizeY)
 {
   this->sizeX = _sizeX;
@@ -26,26 +26,20 @@ FlipDot::FlipDot(int _sizeX, int _sizeY) :
   displayBuffer = (boolean*) calloc(FD_COLUMS*2, sizeof(boolean));
 }
 
-void FlipDot::begin()
+void FlipDot::begin(int8_t latch, int8_t oe, int8_t col, int8_t comm)
 {
-  this->latchPin = LATCH;
-  this->oePin = OE;
-  this->resPin = RES;
-  this->colPin = COL;
-  this->comPin = COMM;
-//  this->redPin = LED_RED;
-//  this->greenPin = LED_GREEN;
-//  this->bluePin = LED_BLUE;
+  this->latchPin = latch;
+  this->oePin = oe;
+  this->colPin = col;
+  this->comPin = comm;
 
   memset(fdMtx, 0x00, sizeof(fdMtx));
 
   SPI.begin ();
   pinMode(this->latchPin, OUTPUT);
   pinMode(this->oePin, OUTPUT);
-  pinMode(this->resPin, OUTPUT);
   pinMode(this->colPin, OUTPUT);
   pinMode(this->comPin, OUTPUT);
-  digitalWrite (this->resPin, HIGH);
   delayMicroseconds(100);
   bitSet  (this->fdCtrl, FD_FRAME_SIG);
   ShiftOut();
@@ -54,6 +48,12 @@ void FlipDot::begin()
   digitalWrite(this->comPin, HIGH);
 
 }
+
+void FlipDot::begin(void)
+{
+  begin(LATCH,OE,COL,COMM);
+}
+
 
 void FlipDot::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if (x >= this->sizeX || y >= this->sizeY) return;
