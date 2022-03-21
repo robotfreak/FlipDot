@@ -15,24 +15,7 @@
   Adopted for Annax Flipdot by robotfreak
 *********************************************************************/
 
-// Button Pin Setup
-int buttonRotate = 3; // Rotate
-int buttonRight = 6;  // Right
-int buttonLeft = 7;   // Left
-int buttonDown = 8;   // Down
-
-//Screen Size Parameters
-int x_pixels = 50;
-int y_pixels = 16;
-
 //int speakerPin = 8;
-
-#include <Adafruit_GFX.h>
-#include "Flipdot.h"
-
-
-
-FlipDot matrix(50, FD_ROWS);
 
 /* ========================== Tetris Game ========================= */
 long delays = 0;
@@ -58,41 +41,28 @@ unsigned long startTime;
 unsigned long elapsedTime;
 int cnt = 0;
 
-void setup() {
-  Serial.begin(9600);
+void tetrisSetup() {
+
+  Serial.println("Tetris");
   randomSeed(analogRead(0));
 
-  pinMode(buttonRotate, INPUT_PULLUP); // Rotate
-  pinMode(buttonRight, INPUT_PULLUP);  // Right
-  pinMode(buttonLeft, INPUT_PULLUP);   // Left
-  pinMode(buttonDown, INPUT_PULLUP);   // Down
-
-
-  matrix.begin();
-  matrix.setPanels(2);
-
-  //flipdot.display();
-  matrix.update();
-  // Clear the buffer.
-  matrix.fillScreen(BLACK);;
-  //flipdot.update();
   // Display Arduino Pong splashscreen
-  matrix.setTextSize(1);
-  matrix.setTextColor(YELLOW);
-  matrix.setCursor(matrix.width() / 2 - 20, 0);
-  matrix.println("Arduino");
-  matrix.setCursor(matrix.width() / 2 - 20 / 2, 8);
-  matrix.println("Tetris");
+  flipdot.setTextSize(1);
+  flipdot.setTextColor(YELLOW);
+  flipdot.setCursor(flipdot.width() / 2 - 20, 0);
+  flipdot.println("Arduino");
+  flipdot.setCursor(flipdot.width() / 2 - 20 / 2, 8);
+  flipdot.println("Tetris");
   //flipdot.display();
-  matrix.update();
+  flipdot.update();
   delay(2000);
 
   newBlock();
-  matrix.update();
+  flipdot.update();
 
 }
 
-void loop() {
+void tetrisLoop() {
 
   if (delays < millis())
   {
@@ -184,7 +154,7 @@ int readBut()
   {
     //left
     bdelay = millis() + btsidedelay;    
-    return 2;
+    return 3;
   }
   
   if ((digitalRead(buttonDown) == LOW))
@@ -197,7 +167,7 @@ int readBut()
   {
     //right
     bdelay = millis() + btsidedelay;
-    return 3;
+    return 2;
   }  
   if ((digitalRead(buttonRotate) == LOW))
   {
@@ -222,12 +192,12 @@ void updateMatrix()
     {
       disp[i][j] = block[i][j] | pile[i][j];
       if (disp[i][j])
-        matrix.drawPixel(j,i,YELLOW);
+        flipdot.drawPixel(j,i,YELLOW);
       else
-        matrix.drawPixel(j,i,BLACK);
+        flipdot.drawPixel(j,i,BLACK);
     }
   }
-  matrix.update();
+  flipdot.update();
 }
 
 

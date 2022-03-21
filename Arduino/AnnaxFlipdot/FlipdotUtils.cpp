@@ -19,6 +19,7 @@
 
 FlipDotUtils::FlipDotUtils(FlipDot & _flipdot) {
   this->flipdot = &_flipdot;
+  this->serialDebug = false;
 }
 
 void FlipDotUtils::setSerialDebug(bool flag) {
@@ -50,7 +51,8 @@ void FlipDotUtils::clearFrameBuffer(int color) {
 
 void FlipDotUtils::updatePanel(void)
 {
-  printFrameBuffer();
+  if (this->serialDebug == true)
+    printFrameBuffer();
   flipdot->update();
 }
 //====================================================

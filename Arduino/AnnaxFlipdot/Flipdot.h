@@ -53,6 +53,7 @@ class FlipDot : public Adafruit_GFX {
     //FlipDot();
     FlipDot(int16_t x, int16_t y);
     void begin();
+    void setOnTime(int time);
     void setPanels(int16_t cnt);
     void drawPixel(int16_t, int16_t, uint16_t); 
     void set(int16_t x, int16_t y, uint16_t color);
@@ -80,6 +81,7 @@ class FlipDot : public Adafruit_GFX {
 //    int redPin, greenPin, bluePin;
     int sizeX, sizeY;
     int panels;
+    int onTime;
 };
 
 #endif /* __FLIPDOT_H__ */

@@ -20,6 +20,7 @@ FlipDot::FlipDot(int _sizeX, int _sizeY) :
   this->sizeX = _sizeX;
   this->sizeY = _sizeY;
   this->panels = FD_PANELS;
+  this->onTime = 2000;
 
 //  this->invert = invert; 
   displayBuffer = (boolean*) calloc(FD_COLUMS*2, sizeof(boolean));
@@ -49,8 +50,9 @@ void FlipDot::begin()
   bitSet  (this->fdCtrl, FD_FRAME_SIG);
   ShiftOut();
   digitalWrite (this->oePin, LOW);
-  digitalWrite (this->colPin, LOW);
+  digitalWrite (this->colPin, HIGH);
   digitalWrite(this->comPin, HIGH);
+
 }
 
 void FlipDot::drawPixel(int16_t x, int16_t y, uint16_t color) {
@@ -64,6 +66,10 @@ void FlipDot::setPanels(int16_t cnt) {
     this->panels = cnt;
 }
 
+void FlipDot::setOnTime(int time)
+{
+  this->onTime = time;
+}
 
 // Reverse the order of bits in a byte.
 // I.e. MSB is swapped with LSB, etc.
@@ -158,7 +164,7 @@ void FlipDot::updatePanel(int panel)
     digitalWrite (this->comPin, HIGH);
  //   bitClear(this->fdCtrl, FD_COLUMN_SIG);
     ShiftOut();
-    delayMicroseconds(2100);
+    delayMicroseconds(this->onTime);
 
     //bitSet  (this->fdCtrl, FD_COLUMN_SIG);
     if ((this->fdMtx[0][col] != 0) || (this->fdMtx[1][col] != 0))
@@ -183,7 +189,7 @@ void FlipDot::updatePanel(int panel)
     this->fdRow1 = bitReverse(fdMtx[0][col]);
     this->fdRow2 = bitReverse(fdMtx[1][col]);
     ShiftOut();
-    delayMicroseconds(2000);
+    delayMicroseconds(this->onTime);
 
     this->fdRow1 = 0;
     this->fdRow2 = 0;
@@ -202,8 +208,8 @@ void FlipDot::updatePanel(int panel)
 
 void FlipDot::update(void)
 {
-  digitalWrite (this->colPin, HIGH);
-  delay(50);
+  //digitalWrite (this->colPin, HIGH);
+  //delay(50);
   // initial state
   this->fdRow1 = 0x00;
   this->fdRow2 = 0x00;
@@ -213,8 +219,8 @@ void FlipDot::update(void)
   {
     updatePanel(f);
   }
-  delay(50);
-  digitalWrite (this->colPin, LOW);
+  //delay(50);
+  //digitalWrite (this->colPin, LOW);
 }
 
 /*
