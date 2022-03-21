@@ -39,6 +39,7 @@
 //     It gets evaluated after reception of that character
 //
 ////////////////////////////////////////////////////////////////////////////
+#include <SoftwareSerial.h>
 #include "Flipdot.h"
 #include "FlipdotUtils.h"
 
@@ -58,6 +59,8 @@ String outputString;
 int fdState = 0;
 int fdMode = 0;
 
+SoftwareSerial mySerial(A5, A4); // RX, TX
+
 FlipDot flipdot(FD_COLUMS, FD_ROWS);
 FlipDotUtils fdu(flipdot);
 
@@ -65,6 +68,7 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println("FlipdotTwitter v0.1");
+  mySerial.begin(9600);
 
   flipdot.begin();
   fdu.updatePanel();
@@ -77,20 +81,28 @@ boolean checkForCommand(void) {
   char c;
 
   boolean ret = false;
-  if (Serial.available() > 0) {
-    c = Serial.read();
+  if (mySerial.available() > 0) {
+    c = mySerial.read();
+    Serial.write(c);
     if (commandLine.length() < 100) {
-      if (c != '\r')
+      if (c != '\r' || c != '\n')
         commandLine += c;
     }
     else {
       commandLine = "";
-      Serial.print("?");
+      Serial.print("Cmd too long");
     }
 
     // ==== If command string is complete... =======
-    if (c == '\n') {
-      ret = true;
+    if (c == '\n' || c == '\r') {
+      if (commandLine.charAt(0) != '>') {
+        commandLine += '\n';
+        //Serial.println("Cmd complete"); 
+        ret = true;
+      }
+      else {
+        commandLine = "";
+      }
     }
   }
   return ret;
@@ -108,9 +120,14 @@ void execCommand() {
 
   String str;
 
+  //Serial.print("CMD: ");
   //Serial.println(commandLine);
 
   cmd = commandLine.charAt(0);
+  if (cmd == '>') {
+    commandLine = "";    // Reset command mode
+    return;
+  }
   if (commandLine.charAt(2) == 'Y') color = 1; else color = 0;
   cmdPtr = 4;
   str = "";
@@ -149,7 +166,7 @@ void execCommand() {
     ySiz = str.toInt();
 
   }
-  else
+  else if (cmd == 'P')
   {
     cmdPtr++;
     fontSize = commandLine.charAt(cmdPtr);
@@ -197,7 +214,7 @@ void execCommand() {
   // ======= Execute the respective command ========
   switch (cmd) {
     case 'C':  fdu.clearFrameBuffer(color); Serial.println("C"); fdu.updatePanel(); break;
-    case 'S':  fdu.setPixel(xVal, yVal, color); break;
+    case 'S':  fdu.setPixel(xVal, yVal, color); fdu.updatePanel(); break;
     case 'H':  fdu.hLine(yVal, color); fdu.updatePanel(); Serial.println("H"); break;
     case 'V':  fdu.vLine(xVal, color); fdu.updatePanel(); Serial.println("V"); break;
     case 'P':  if (outputString.length() > 19) scrollText(outputString); else fdu.printString(xVal, yVal, color, fsize, outputString); fdu.updatePanel(); Serial.println("P");  break;
@@ -246,6 +263,7 @@ void scrollText(String str)
   }
 }
 
+#if 0
 //===================================
 // For debugging and testing only
 //===================================
@@ -380,3 +398,4 @@ void flipTest(void) {
     fdu.updatePanel();
   }
 }
+#endif
