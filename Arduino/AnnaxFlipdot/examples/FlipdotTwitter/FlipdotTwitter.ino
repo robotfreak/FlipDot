@@ -46,6 +46,10 @@
 #define TXT_BUF_SIZ 150
 #define SCROLL_TIME 10
 
+const byte LED_RED = 3;
+const byte LED_GREEN = 6;
+const byte LED_BLUE = 7;  // no PWM pin
+
 char textBuf[TXT_BUF_SIZ];
 int textBufLen;
 bool scroll = false;
@@ -59,6 +63,8 @@ String outputString;
 int fdState = 0;
 int fdMode = 0;
 
+int r, g, b;
+
 SoftwareSerial mySerial(A5, A4); // RX, TX
 
 FlipDot flipdot(FD_COLUMS, FD_ROWS);
@@ -67,10 +73,16 @@ FlipDotUtils fdu(flipdot);
 void setup() {
 
   Serial.begin(115200);
-  Serial.println("FlipdotTwitter v0.1");
+  Serial.println("FlipdotTwitter v0.2");
   mySerial.begin(9600);
 
+  r = 0;
+  g = 0xFF;
+  b = 0;
+  setLedColor(r, g, b);
+
   flipdot.begin();
+  fdu.setSerialDebug(true);
   fdu.updatePanel();
   fdu.clearFrameBuffer(OFF);
   i = fdu.printString(5, 0, ON, XLARGE, "IN-BERLIN");
@@ -78,11 +90,19 @@ void setup() {
 }
 
 boolean checkForCommand(void) {
-  char c;
+  char c = 0;
 
   boolean ret = false;
   if (mySerial.available() > 0) {
     c = mySerial.read();
+  }
+  else if (Serial.available() > 0) {
+    c = Serial.read();
+  }
+  else {
+    return ret;
+  }
+  if (c) {
     Serial.write(c);
     if (commandLine.length() < 100) {
       if (c != '\r' || c != '\n')
@@ -221,7 +241,7 @@ void execCommand() {
     case 'B':  fdu.printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); fdu.updatePanel(); Serial.println("B"); break;
     case 'U':  fdu.updatePanel(); Serial.println("U"); break;
     case 'f':  fdMode = 1; break;
-    case 'n':  fdMode = 2; break;
+    case 'n':  printNews(xVal); break;
     case 't':  fdMode = 3; break;
     case 'd':  fdMode = 4; break;
       // case 'h':  showHelp(); break;
@@ -234,6 +254,13 @@ void loop() {
     execCommand();
 
   //printNews();
+}
+
+void setLedColor(uint16_t red, uint16_t green, uint16_t blue)
+{
+  analogWrite(LED_RED, red);
+  analogWrite(LED_GREEN, green);
+  analogWrite(LED_BLUE, blue);
 }
 
 void scrollText(String str)
@@ -263,19 +290,24 @@ void scrollText(String str)
   }
 }
 
-#if 0
 //===================================
 // For debugging and testing only
 //===================================
-void printNews() {
+void printNews(int state) {
   static unsigned long previousMillis = 0;        // will store last time from update
-
+  bool trigger = false;
   unsigned long currentMillis = millis();
   String str;
 
-  if (currentMillis - previousMillis >= 60000) {
-    // save the last time you blinked the LED
+  if (state >= 0) {
+    fdState = state;
+    trigger = true;
+  }
+  else if (currentMillis - previousMillis >= 60000) {
     previousMillis = currentMillis;
+    trigger = true;
+  }
+  if (trigger) {
     fdu.clearFrameBuffer(OFF);
     switch (fdState)
     {
@@ -286,15 +318,22 @@ void printNews() {
         break;
       case 1:
         Serial.println("eLab");
-        i = fdu.printString(5, 0, ON, XSMALL, "Di 19-22");
-        i = fdu.printString(5, 8, ON, XSMALL, "Fr 19-01");
+        i = fdu.printString(5, 0, ON, SMALL, "Di 19-22");
+        i = fdu.printString(5, 8, ON, SMALL, "Fr 19-01");
         i = fdu.printString(60, 0, ON, XLARGE, "ELAB");
         fdState++;
         break;
       case 2:
         Serial.println("BeLUG");
-        i = fdu.printString(5, 5, ON, XSMALL, "Mi 18-21");
+        i = fdu.printString(5, 5, ON, SMALL, "Mi 18-21");
         i = fdu.printString(58, 0, ON, XLARGE, "BELUG");
+        fdState++;
+        break;
+      case 3:
+        Serial.println("Retro");
+        i = fdu.printString(5, 0, ON, SMALL, "last Sa");
+        i = fdu.printString(5, 8, ON, SMALL, "15-24");
+        i = fdu.printString(58, 0, ON, XLARGE, "RETRO");
         fdState = 0;
         break;
       default:
@@ -307,16 +346,24 @@ void printNews() {
 
 }
 
+#if 0
 //===================================
 // For debugging and testing only
 //===================================
-void printTest() {
+void printTest(state) {
   static unsigned long previousMillis = 0;        // will store last time from update
   unsigned long currentMillis = millis();
+  bool trigger = false;
 
-  if (currentMillis - previousMillis >= 10000) {
-    // save the last time you blinked the LED
+  if (state >= 0) {
+    fdState = state;
+    trigger = true;
+  }
+  else if (currentMillis - previousMillis >= 10000) {
     previousMillis = currentMillis;
+    trigger = true;
+  }
+  if (trigger) {
     fdu.clearFrameBuffer(OFF);
     switch (fdState)
     {
