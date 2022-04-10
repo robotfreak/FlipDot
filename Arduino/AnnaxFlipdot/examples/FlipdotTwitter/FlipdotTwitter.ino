@@ -117,7 +117,7 @@ boolean checkForCommand(void) {
     if (c == '\n' || c == '\r') {
       if (commandLine.charAt(0) != '>') {
         commandLine += '\n';
-        //Serial.println("Cmd complete"); 
+        //Serial.println("Cmd complete");
         ret = true;
       }
       else {
@@ -200,51 +200,58 @@ void execCommand() {
 
   cmdPtr++;
   outputString = "";
-  while ((cmdPtr < commandLine.length() - 1) && (outputString.length() < 100)) {
-    outputString += (char)commandLine.charAt(cmdPtr);
+  while ((cmdPtr < (commandLine.length() - 1)) && (outputString.length() < 100)) {
+    if ((cmd == 'P') && (commandLine.charAt(cmdPtr) >= ' '))
+      outputString += (char)commandLine.charAt(cmdPtr);
     cmdPtr++;
   }
   commandLine = "";    // Reset command mode
 
-  // ======= Debug only ===========
-  Serial.println((char)cmd);
-  Serial.print("Color: ");
-  Serial.println(color);
-  Serial.print("xVal: ");
-  Serial.println(xVal);
-  Serial.print("yVal: ");
-  Serial.println(yVal);
+  if (cmd >= 'A' && cmd <= 'z') {
+    // ======= Debug only ===========
+    Serial.println((char)cmd);
+    Serial.print("Color: ");
+    Serial.println(color);
+    Serial.print("xVal: ");
+    Serial.println(xVal);
+    Serial.print("yVal: ");
+    Serial.println(yVal);
 
-  if (cmd == 'B')
-  {
-    Serial.print("xSiz: ");
-    Serial.println(xSiz);
-    Serial.print("ySiz: ");
-    Serial.println(ySiz);
-  }
-  else
-  {
-    Serial.print("font: ");
-    Serial.println(fontSize);
-  }
-  Serial.println(outputString);
+    if (cmd == 'B')
+    {
+      Serial.print("xSiz: ");
+      Serial.println(xSiz);
+      Serial.print("ySiz: ");
+      Serial.println(ySiz);
+    }
+    else
+    {
+      Serial.print("font: ");
+      Serial.println(fontSize);
+    }
+    if (cmd == 'P') {
+      Serial.print("text: '");
+      Serial.print(outputString);
+      Serial.println("'");
+    }
 
-  fdMode = 0;
-  fdState = 0;
-  // ======= Execute the respective command ========
-  switch (cmd) {
-    case 'C':  fdu.clearFrameBuffer(color); Serial.println("C"); fdu.updatePanel(); break;
-    case 'S':  fdu.setPixel(xVal, yVal, color); fdu.updatePanel(); break;
-    case 'H':  fdu.hLine(yVal, color); fdu.updatePanel(); Serial.println("H"); break;
-    case 'V':  fdu.vLine(xVal, color); fdu.updatePanel(); Serial.println("V"); break;
-    case 'P':  if (outputString.length() > 19) scrollText(outputString); else fdu.printString(xVal, yVal, color, fsize, outputString); fdu.updatePanel(); Serial.println("P");  break;
-    case 'B':  fdu.printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); fdu.updatePanel(); Serial.println("B"); break;
-    case 'U':  fdu.updatePanel(); Serial.println("U"); break;
-    case 'f':  fdMode = 1; break;
-    case 'n':  printNews(xVal); break;
-    case 't':  fdMode = 3; break;
-    case 'd':  fdMode = 4; break;
-      // case 'h':  showHelp(); break;
+    fdMode = 0;
+    fdState = 0;
+    // ======= Execute the respective command ========
+    switch (cmd) {
+      case 'C':  fdu.clearFrameBuffer(color); Serial.println("C"); fdu.updatePanel(); break;
+      case 'S':  fdu.setPixel(xVal, yVal, color); fdu.updatePanel(); break;
+      case 'H':  fdu.hLine(yVal, color); fdu.updatePanel(); Serial.println("H"); break;
+      case 'V':  fdu.vLine(xVal, color); fdu.updatePanel(); Serial.println("V"); break;
+      case 'P':  fdu.printString(xVal, yVal, color, fsize, outputString); fdu.updatePanel(); Serial.println("P");  break;
+      case 'B':  fdu.printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); fdu.updatePanel(); Serial.println("B"); break;
+      case 'U':  fdu.updatePanel(); Serial.println("U"); break;
+      case 'f':  fdMode = 1; break;
+      case 'n':  printNews(xVal); break;
+      case 't':  fdMode = 3; break;
+      case 'd':  fdMode = 4; break;
+        // case 'h':  showHelp(); break;
+    }
   }
 }
 
