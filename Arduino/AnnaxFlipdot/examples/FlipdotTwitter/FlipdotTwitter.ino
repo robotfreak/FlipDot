@@ -19,10 +19,14 @@
 //     H  Draw a horizontal line
 //     V  Draw a vertical line
 //     S  Set a pixel
+//     L  Set LED color (r,g,b)
 //     U  Update Panel
 //   Color:
 //     B  Black
 //     Y  Yellow
+//     r  Red
+//     g  Green
+//     b  Blue
 //   X,Y:
 //     Required for all Print commands
 //     Only Y is required for the horizontal line command "H"
@@ -73,7 +77,7 @@ FlipDotUtils fdu(flipdot);
 void setup() {
 
   Serial.begin(115200);
-  Serial.println("FlipdotTwitter v0.2");
+  Serial.println("FlipdotTwitter v0.3");
   mySerial.begin(9600);
 
   r = 0;
@@ -85,7 +89,8 @@ void setup() {
   fdu.setSerialDebug(true);
   fdu.updatePanel();
   fdu.clearFrameBuffer(OFF);
-  i = fdu.printString(5, 0, ON, XLARGE, "IN-BERLIN");
+  printNews(4);
+  //i = fdu.printString(5, 0, ON, XLARGE, "ELAB");
   fdu.updatePanel();
 }
 
@@ -117,7 +122,7 @@ boolean checkForCommand(void) {
     if (c == '\n' || c == '\r') {
       if (commandLine.charAt(0) != '>') {
         commandLine += '\n';
-        //Serial.println("Cmd complete");
+        //Serial.println("Cmd complete"); 
         ret = true;
       }
       else {
@@ -200,58 +205,56 @@ void execCommand() {
 
   cmdPtr++;
   outputString = "";
-  while ((cmdPtr < (commandLine.length() - 1)) && (outputString.length() < 100)) {
-    if ((cmd == 'P') && (commandLine.charAt(cmdPtr) >= ' '))
-      outputString += (char)commandLine.charAt(cmdPtr);
+  while ((cmdPtr < commandLine.length() - 1) && (outputString.length() < 100)) {
+    outputString += (char)commandLine.charAt(cmdPtr);
     cmdPtr++;
   }
   commandLine = "";    // Reset command mode
 
-  if (cmd >= 'A' && cmd <= 'z') {
-    // ======= Debug only ===========
-    Serial.println((char)cmd);
-    Serial.print("Color: ");
-    Serial.println(color);
-    Serial.print("xVal: ");
-    Serial.println(xVal);
-    Serial.print("yVal: ");
-    Serial.println(yVal);
+  // ======= Debug only ===========
+  Serial.println((char)cmd);
+  Serial.print("Color: ");
+  Serial.println(color);
+  Serial.print("xVal: ");
+  Serial.println(xVal);
+  Serial.print("yVal: ");
+  Serial.println(yVal);
 
-    if (cmd == 'B')
-    {
-      Serial.print("xSiz: ");
-      Serial.println(xSiz);
-      Serial.print("ySiz: ");
-      Serial.println(ySiz);
-    }
-    else
-    {
-      Serial.print("font: ");
-      Serial.println(fontSize);
-    }
-    if (cmd == 'P') {
-      Serial.print("text: '");
-      Serial.print(outputString);
-      Serial.println("'");
-    }
+  if (cmd == 'B')
+  {
+    Serial.print("xSiz: ");
+    Serial.println(xSiz);
+    Serial.print("ySiz: ");
+    Serial.println(ySiz);
+  }
+  else
+  {
+    Serial.print("font: ");
+    Serial.println(fontSize);
+  }
+  Serial.println(outputString);
 
-    fdMode = 0;
-    fdState = 0;
-    // ======= Execute the respective command ========
-    switch (cmd) {
-      case 'C':  fdu.clearFrameBuffer(color); Serial.println("C"); fdu.updatePanel(); break;
-      case 'S':  fdu.setPixel(xVal, yVal, color); fdu.updatePanel(); break;
-      case 'H':  fdu.hLine(yVal, color); fdu.updatePanel(); Serial.println("H"); break;
-      case 'V':  fdu.vLine(xVal, color); fdu.updatePanel(); Serial.println("V"); break;
-      case 'P':  fdu.printString(xVal, yVal, color, fsize, outputString); fdu.updatePanel(); Serial.println("P");  break;
-      case 'B':  fdu.printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); fdu.updatePanel(); Serial.println("B"); break;
-      case 'U':  fdu.updatePanel(); Serial.println("U"); break;
-      case 'f':  fdMode = 1; break;
-      case 'n':  printNews(xVal); break;
-      case 't':  fdMode = 3; break;
-      case 'd':  fdMode = 4; break;
-        // case 'h':  showHelp(); break;
-    }
+  fdMode = 0;
+  fdState = 0;
+  // ======= Execute the respective command ========
+  switch (cmd) {
+    case 'C':  fdu.clearFrameBuffer(color); Serial.println("C"); fdu.updatePanel(); break;
+    case 'S':  fdu.setPixel(xVal, yVal, color); fdu.updatePanel(); break;
+    case 'H':  fdu.hLine(yVal, color); fdu.updatePanel(); Serial.println("H"); break;
+    case 'V':  fdu.vLine(xVal, color); fdu.updatePanel(); Serial.println("V"); break;
+    case 'P':  if (outputString.length() > 19) scrollText(outputString); else fdu.printString(xVal, yVal, color, fsize, outputString); fdu.updatePanel(); Serial.println("P");  break;
+    case 'B':  fdu.printBitmap(xVal, yVal, color, xSiz, ySiz, outputString); fdu.updatePanel(); Serial.println("B"); break;
+    case 'L':  if (color == 'r') setLedColor(0xff,0,0); 
+               else if (color == 'g') setLedColor(0, 0xff,0); 
+               else if (color == 'b') setLedColor(0, 0, 0xff);
+               else setLedColor(0, 0,0); 
+               break;
+    case 'U':  fdu.updatePanel(); Serial.println("U"); break;
+    case 'f':  fdMode = 1; break;
+    case 'n':  printNews(xVal); break;
+    case 't':  fdMode = 3; break;
+    case 'd':  fdMode = 4; break;
+      // case 'h':  showHelp(); break;
   }
 }
 
@@ -342,6 +345,37 @@ void printNews(int state) {
         i = fdu.printString(5, 8, ON, SMALL, "15-24");
         i = fdu.printString(58, 0, ON, XLARGE, "RETRO");
         fdState = 0;
+        break;
+      case 4:
+        Serial.println("berlinCreators");
+        i = fdu.printBitmap( 4,0,ON,8,8,"0000000000C0C0C0");
+        i = fdu.printBitmap( 4,8,ON,8,8,"C0FCFEC6C6C6FE7C");
+        i = fdu.printBitmap(12,0,ON,8,8,"0000000000000000");
+        i = fdu.printBitmap(12,8,ON,8,8,"70F9D9F9F1C1F979");
+        i = fdu.printBitmap(20,0,ON,8,8,"00000000000C0C0C");
+        i = fdu.printBitmap(20,8,ON,8,8,"ECED8D8C8C8C8E86");
+        i = fdu.printBitmap(28,0,ON,8,8,"000000000000C0C0");
+        i = fdu.printBitmap(28,8,ON,8,8,"1FDFD9D9D9D9D9D9");
+        i = fdu.printBitmap(36,0,ON,8,8,"001008000306EC08");
+        i = fdu.printBitmap(36,8,ON,8,8,"08888C8682838381");
+        i = fdu.printBitmap(44,0,ON,8,8,"80848800E0301B08");
+        i = fdu.printBitmap(44,8,ON,8,8,"0808183020E0E0C0");
+        i = fdu.printBitmap(52,0,ON,8,8,"000000000F1FBC70");
+        i = fdu.printBitmap(52,8,ON,8,8,"7060607070381F0F");
+        i = fdu.printBitmap(60,0,ON,8,8,"00000000E0F07818");
+        i = fdu.printBitmap(60,8,ON,8,8,"010303031B7BF3C3");
+        i = fdu.printBitmap(68,0,ON,8,8,"0000000000000000");
+        i = fdu.printBitmap(68,8,ON,8,8,"CEDF1B1F1E181F0F");
+        i = fdu.printBitmap(76,0,ON,8,8,"0000000000000000");
+        i = fdu.printBitmap(76,8,ON,8,8,"7C7E063E7E667E3E");
+        i = fdu.printBitmap(84,0,ON,8,8,"0000000000002060");
+        i = fdu.printBitmap(84,8,ON,8,8,"F9FB676666677B39");
+        i = fdu.printBitmap(92,0,ON,8,8,"0000000000000000");
+        i = fdu.printBitmap(92,8,ON,8,8,"E1F33B1B1B3BF3E3");
+        i = fdu.printBitmap(100,0,ON,8,8,"0000000000000000");
+        i = fdu.printBitmap(100,8,ON,8,8,"CFDF181E0F031F1E");
+        i = fdu.printBitmap(108,0,ON,8,8,"0000000000000000");
+        i = fdu.printBitmap(108,8,ON,8,8,"0000000000000000");
         break;
       default:
         fdState = 0;
