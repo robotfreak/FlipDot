@@ -27,6 +27,7 @@ class FlipDotUtils {
     void updatePanel(void);
     void setPixel(int x, int y, int color);
     int hex2int(char *hex);
+    int writeBitmap(int xOffs, int yOffs, int xSize, int ySize, int size, char *buf);
     int printBitmap(int xOffs, int yOffs, int color, int xSize, int ySize, String s);
     void hLine(int y, int color);
     void vLine(int x, int color);

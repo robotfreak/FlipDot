@@ -19,7 +19,6 @@
 
 FlipDotUtils::FlipDotUtils(FlipDot & _flipdot) {
   this->flipdot = &_flipdot;
-  this->serialDebug = false;
 }
 
 void FlipDotUtils::setSerialDebug(bool flag) {
@@ -51,8 +50,7 @@ void FlipDotUtils::clearFrameBuffer(int color) {
 
 void FlipDotUtils::updatePanel(void)
 {
-  if (this->serialDebug == true)
-    printFrameBuffer();
+  printFrameBuffer();
   flipdot->update();
 }
 //====================================================
@@ -78,6 +76,63 @@ int FlipDotUtils::hex2int(char *hex) {
     val = (val << 4) | (byte & 0xF);
   }
   return val;
+}
+
+//============================================
+// writeBitmap(int xOffs, int yOffs, int xSize, int ySize, int size, char *buf)
+// xOffs = position of the left side of the bitmap
+// yOffs = position of the top of the bitmap
+// xSize = horizontal size of the bitmap
+// ySize = vertical sizw of the bitmap
+// size = size of the bitmap
+// buf = character buffer
+//============================================
+int FlipDotUtils::writeBitmap(int xOffs, int yOffs, int xSize, int ySize, int size, char *buf) {
+  int i, x, y, xs, ys, xt, yt, xo, yo, sz;
+  unsigned char w;
+  char debBuf[128];
+
+  i = 0;
+  sz = size;
+
+  while (sz)
+  {
+    ys = ySize;
+    yo = 0;
+    while (ys > 0)
+    {
+      if (ys < 8) yt = ys; else yt = 8;
+      for (y = 0; y < yt; y++)
+      {
+        xs = xSize;
+        xo = 0;
+        while (xs > 0)
+        {
+          w = pgm_read_byte(&buf[i]);
+          sprintf(&debBuf[0],"w=%0x i=%d xs=%d ys=%d xo=%d yo=%d\n", w, i, xs, ys, xo, yo);
+          Serial.print(debBuf);
+          if (xs < 8) xt = xs; else xt = 8;
+          for (x = 0; x < xt; x++)
+          {
+            if (w & 1) {
+              setFrameBuffer(8 - x + xo + xOffs, y + yo + yOffs, YELLOW);
+            }
+            else {
+              setFrameBuffer(8 - x + xo + xOffs, y + yo + yOffs, BLACK);
+            }
+            w = w >> 1;
+          }
+          xs -= xt;
+          xo += xt;
+          i++;
+          sz--;
+        }
+      }
+      ys -= yt;
+      yo += yt;
+    }
+  }
+  return (x);
 }
 
 //============================================
