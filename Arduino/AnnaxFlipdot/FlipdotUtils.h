@@ -33,7 +33,7 @@ class FlipDotUtils {
     void vLine(int x, int color);
     void shiftFrameBuffer(int fs);
     void scrollFrameBuffer();
-    int printString(int xOffs, int yOffs, int color, int size, String s);
+    int printString(int xOffs, int yOffs, int color, int size, char * s, int slen);
     void printFrameBuffer(void);
     void setFrameBuffer(int x, int y, int value);
     int getFrameBuffer(int x, int y);

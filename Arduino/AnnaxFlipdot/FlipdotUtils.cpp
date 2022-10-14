@@ -257,23 +257,37 @@ void FlipDotUtils::scrollFrameBuffer() {
 // size = SMALL | MEDIUM | LARGE
 // s = string
 //============================================
-int FlipDotUtils::printString(int xOffs, int yOffs, int color, int size, String s) {
+int FlipDotUtils::printString(int xOffs, int yOffs, int color, int size, char * s, int slen) {
   int i, x, y;
   char c;
-
+  //char ba[100];
   i = 0;
   x = xOffs;
   y = yOffs;
 
+  //s.toCharArray(ba, sizeof(s));
+  
+  Serial.print("X: ");
+  Serial.print(xOffs);
+  Serial.print(" Y: ");
+  Serial.print(yOffs);
+  Serial.print(" C: ");
+  Serial.print(color);
+  Serial.print(" S: ");
+  Serial.print(size);
+  Serial.print(", '");
+  Serial.print(s);
+  Serial.println("'");
+
   if (size == SMALL) x = xOffs - 2; // Somehow I need to shift the text to the left
 
-  while ((i < s.length()) && (i < 100)) {
+  while (i<slen && i < 100) {
     switch (size) {
-      case XSMALL: x = printChar3x5(x, y, color, s.charAt(i)); break;
-      case SMALL: x = printChar5x7(x, y, color, s.charAt(i)); break;
-      case MEDIUM: x = printChar6x8v(x, y, color, s.charAt(i)); break;
-      case LARGE: x = printChar8x12(x, y, color, s.charAt(i)); break;
-      case XLARGE: x = printChar9x16(x, y, color, s.charAt(i)); break;
+      case XSMALL: x = printChar3x5(x, y, color, s[i]); break;
+      case SMALL: x = printChar5x7(x, y, color, s[i]); break;
+      case MEDIUM: x = printChar6x8v(x, y, color, s[i]); break;
+      case LARGE: x = printChar8x12(x, y, color, s[i]); break;
+      case XLARGE: x = printChar9x16(x, y, color, s[i]); break;
       default: x = printChar5x7(x, y, color, s[i]);
     }
     //Serial.print(s.charAt(i));
